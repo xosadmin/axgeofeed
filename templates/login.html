@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+<h2>Authentication Required</h2>
+<form method="POST" action="/">
+  <div class="form-group fillForms">
+      <label for="username">Username</label>
+      {{ form.username(class="form-control", id="username", type="text", placeholder="Username", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="password">Password</label>
+      {{ form.password(class="form-control", id="password", placeholder="Password", required=true) }}
+  </div>
+  {{ form.submit() }}
+</form>
+{% endblock %}

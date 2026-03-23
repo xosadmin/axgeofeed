@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Add or Edit Entry - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+{% if prefix %}
+  <h2>Edit Entry - {{prefix}}</h2>
+{% else %}
+  <h2>Add Entry</h2>
+{%endif%}
+<form method="POST" action="/doaction/{{action}}">
+  <div class="form-group fillForms">
+      <label for="prefix">Prefix</label>
+      {{ form.prefix(class="form-control", id="prefix", type="text", placeholder="Prefix", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="country_code">Country Code (ISO3166)</label>
+      {{ form.country_code(class="form-control", id="country_code", type="text", placeholder="Country Code", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="region_code">region_code</label>
+      {{ form.region_code(class="form-control", id="region_code", type="text", placeholder="Region Code", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="city">City</label>
+      {{ form.city(class="form-control", id="city", type="text", placeholder="City", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="postal_code">Prefix</label>
+      {{ form.postal_code(class="form-control", id="postal_code", type="text", placeholder="Postal Code", required=true) }}
+  </div>
+  {{ form.submit() }}
+</form>
+{% endblock %}

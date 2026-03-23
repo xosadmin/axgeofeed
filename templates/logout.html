@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Logout - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+    <div class="align-center">
+        <h2>All done. See ya!</h2>
+        <p>You have been logged out.</p>
+        <div>
+            <button type="button" class="btn btn-primary" onclick="window.location.replace('/')">Back to homepage</button>
+            <button type="button" class="btn btn-warning" onclick="window.close()">Close this page</button>
+        </div>
+    </div>
+{% endblock %}
