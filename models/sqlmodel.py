@@ -29,3 +29,9 @@ class geofeed(db.Model):
     region_code = db.Column(db.String(50), nullable=True)
     city = db.Column(db.String(80), nullable=True)
     postal_code = db.Column(db.String(80), nullable=True)
+
+class blacklistPrefix(db.Model):
+    __tablename__ = 'blacklist_prefix'
+    id = db.Column(db.String(80), primary_key=True, default=userIDGen)
+    userid = db.Column(db.String(80), db.ForeignKey('users.id'), nullable=False)
+    prefix = db.Column(db.String(80), nullable=False)

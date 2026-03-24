@@ -58,23 +58,19 @@ def query_asset_to_list(query):
     return assets
 
 
-def wrapper(queryAssetResult, queryPrefixResult):
+def wrapper(queryAssetResult, queryPrefixResult, blacklistPrefixList):
     if not queryAssetResult:
         return []
-
     outputs = []
     assets = query_asset_to_list(queryAssetResult)
+    blacklistPrefix = query_prefix_to_list(blacklistPrefixList)
     existing_prefix_set = set(query_prefix_to_list(queryPrefixResult))
-
     for asset in assets:
         new_prefixes = runBGPQ4(asset["assetname"])
-
         for prefix in new_prefixes:
-            if prefix in existing_prefix_set:
+            if prefix in existing_prefix_set or prefix in blacklistPrefix:
                 continue
-
             ipinfo = accessAPI(prefix)
-
             if len(ipinfo) == 0:
                 statement = geofeed(
                     userid=asset["userid"],
@@ -94,5 +90,38 @@ def wrapper(queryAssetResult, queryPrefixResult):
                 )
             outputs.append(statement)
             existing_prefix_set.add(prefix)
+    return outputs
 
+def manualRefresh(queryAssetResult, blacklistPrefixList):
+    if not queryAssetResult:
+        return []
+    outputs = []
+    assets = query_asset_to_list(queryAssetResult)
+    blacklistPrefix = query_prefix_to_list(blacklistPrefixList)
+    for asset in assets:
+        if str(asset["assetname"]).endswith("_MANUAL"):
+            continue
+        new_prefixes = runBGPQ4(asset["assetname"])
+        for prefix in new_prefixes:
+            if prefix in blacklistPrefix:
+                continue
+            ipinfo = accessAPI(prefix)
+            if len(ipinfo) == 0:
+                statement = geofeed(
+                    userid=asset["userid"],
+                    assetid=asset["assetid"],
+                    prefix=prefix,
+                    country_code="NA"
+                )
+            else:
+                statement = geofeed(
+                    userid=asset["userid"],
+                    assetid=asset["assetid"],
+                    prefix=prefix,
+                    country_code=ipinfo["countryCode"],
+                    region_code=f"{ipinfo["countryCode"]}-{ipinfo['region']}",
+                    city=ipinfo["city"],
+                    postal_code=ipinfo["zip"],
+                )
+            outputs.append(statement)
     return outputs

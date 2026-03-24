@@ -36,3 +36,9 @@ CREATE TABLE `geofeed` (
     CONSTRAINT `fk_geofeed_userid` FOREIGN KEY (`userid`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_geofeed_assetid` FOREIGN KEY (`assetid`) REFERENCES `user_asset`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+CREATE TABLE `blacklist_prefix` (
+    `id` VARCHAR(80) PRIMARY KEY NOT NULL,
+    `userid` VARCHAR(80) NOT NULL,
+    `prefix` VARCHAR(80) NOT NULL
+)

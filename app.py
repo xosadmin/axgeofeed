@@ -4,14 +4,14 @@ from flask_login import LoginManager, login_user, current_user, login_required, 
 from sqlalchemy import update
 from utils.ipworks import *
 from utils.bcryptworks import verifyPassword, encrypt_password, encrypt_hash_base64
-from models.formModel import LoginForm, addEditForm, addEditUserForm, addEditASSet
+from models.formModel import LoginForm, addEditForm, addEditUserForm, addEditASSet, addEditBlackListPrefix
 from models.loginModel import *
 from utils.yamlworks import readConf
 from utils.tools import uuidGen, userIDGen, factor_disable
 from utils.query_to_output import query_to_json, build_geofeed_csv
-from utils.cron import wrapper
+from utils.cron import wrapper, manualRefresh
 from utils.assetworks import sanitize_asset
-from models.sqlmodel import db, Users, geofeed, userAsset
+from models.sqlmodel import db, Users, geofeed, userAsset, blacklistPrefix
 import logging
 
 if not os.path.exists(os.path.join(os.getcwd(),'config.yaml')):
@@ -306,6 +306,21 @@ def useraction(action,userid):
     else:
         return "<script>alert('Unknown Action.');history.back();</script>"
 
+@app.route("/syncprefix")
+@login_required
+def syncprefix():
+    current_user_id = current_user.id
+    query = userAsset.query.filter_by(userid=current_user_id).all()
+    blacklistPrefixList = blacklistPrefix.query.all()
+    if not query:
+        return "<script>alert('No AS-SET associated with this user.');history.back();</script>"
+    if len(query) == 1 and query[0].asset_name.endswith("_MANUAL"):
+        return "<script>alert('Please setup AS-SET in your dashboard.');history.back();</script>"
+    outputs = manualRefresh(query, blacklistPrefixList)
+    db.session.bulk_save_objects(outputs)
+    db.session.commit()
+    return "<script>alert('Refresh process has been added to task list. It may take a few minutes.');window.location.href='/dashboard';</script>"
+
 @app.route("/assets")
 @login_required
 def assets():
@@ -343,43 +358,6 @@ def addasset():
             logging.error(f"Form is invalid.")
             return "<script>alert('System error is occurred.');history.back();</script>"
 
-@app.route("/editasset/<id>", methods=['GET','POST'])
-@login_required
-def editasset(id):
-    current_user_id = current_user.id
-    current_user_role = current_user.role
-    form = addEditASSet()
-    if request.method == "GET":
-        query = userAsset.query.filter_by(id=id).first()
-        if current_user_role != 0 and query.userid != current_user_id:
-            return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
-        if not query:
-            return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
-        form.asset_name.data = query.asset_name
-        return render_template("addeditasset.html", form=form, assetid=id)
-    else:
-        if form.validate_on_submit():
-            asset = form.asset_name.data
-            query = userAsset.query.filter_by(id=id).first()
-            if not query:
-                return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
-            if current_user_role != 0 and query.userid != current_user_id:
-                return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
-            if query.systemCreated:
-                return "<script>alert('Cannot modify system-generated manual input set.');history.back();</script>"
-            lookup_existing = userAsset.query.filter_by(asset_name=asset).first()
-            if lookup_existing:
-                return "<script>alert('AS-SET is added by other user. Please contact admin for assistant.');window.location.href='/assets';</script>"
-            asset_name = sanitize_asset(asset)
-            if asset_name is None:
-                return "<script>alert('Invalid AS-SET Entry.');window.location.href='/assets';</script>"
-            db.session.execute(update(userAsset).filter_by(id=id).values(asset_name=asset))
-            db.session.commit()
-            return "<script>alert('Edit successful.');window.location.href='/assets';</script>"
-        else:
-            logging.error(f"Form is invalid.")
-            return "<script>alert('System error is occurred.');history.back();</script>"
-
 @app.route("/deleteasset/<id>")
 @login_required
 def deleteasset(id):
@@ -395,6 +373,56 @@ def deleteasset(id):
     db.session.delete(query)
     db.session.commit()
     return "<script>alert('Delete successful.');window.location.href='/assets';</script>"
+
+@app.route("/blacklistprefix")
+@login_required
+def blacklistprefix():
+    privileged = False
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    if current_user_role == 0:
+        query = blacklistPrefix.query.all()
+        privileged = True
+    else:
+        query = blacklistPrefix.query.filter_by(userid=current_user_id).all()
+    return render_template("blacklist_prefix_list.html",query=query,userid=current_user_id,privileged=privileged)
+
+@app.route("/addblacklistprefix", methods=['GET','POST'])
+@login_required
+def addblacklistprefix():
+    current_user_id = current_user.id
+    form = addEditBlackListPrefix()
+    if request.method == "GET":
+        return render_template("add_edit_blacklist_prefix.html", form=form)
+    else:
+        if form.validate_on_submit():
+            prefix = form.prefix.data
+            if not is_valid_cidr(prefix):
+                return "<script>alert('Invalid CIDR.');history.back();</script>"
+            checkIfExist = blacklistPrefix.query.filter_by(prefix=prefix).first()
+            if checkIfExist:
+                return "<script>alert('The prefix is added by other user.');history.back();</script>"
+            newQuery = blacklistPrefix(userid=current_user_id,prefix=prefix)
+            db.session.add(newQuery)
+            db.session.commit()
+            return "<script>alert('Added successfully.');window.location.href='/blacklistprefix';</script>"
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System Error Occurred.');history.back();</script>"
+
+@app.route("/deleteblacklistprefix/<id>")
+@login_required
+def deleteblacklistprefix(id):
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    query = blacklistPrefix.query.filter_by(id=id).first()
+    if not query:
+        return "<script>alert('No such prefix.');history.back();</script>"
+    if current_user_role != 0 and current_user_id != query.userid:
+        return f"<script>alert('You don't have permission to delete this prefix.');history.back();</script>"
+    db.session.delete(query)
+    db.session.commit()
+    return "<script>alert('Delete successful.');window.location.href='/blacklistprefix';</script>"
 
 @app.route("/logout")
 @login_required
@@ -463,7 +491,8 @@ def cron():
         return jsonify({"Status": False, "Message": "Insufficient permission to execute task."}), 403
     query = userAsset.query.all()
     queryPrefixList = geofeed.query.all()
-    execute = wrapper(query, queryPrefixList)
+    blacklistPrefixList = blacklistPrefix.query.all()
+    execute = wrapper(query, queryPrefixList, blacklistPrefixList)
     if not execute and not isinstance(execute, list):
         logging.error(f"Error occurred while performing cron: Wrapper returns null or false")
         return jsonify({"Status": False, "Message": "Task failed."}), 500

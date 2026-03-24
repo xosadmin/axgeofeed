@@ -30,3 +30,7 @@ class addEditUserForm(FlaskForm):
 class addEditASSet(FlaskForm):
     asset_name = StringField('AS-SET', validators=[DataRequired(), Length(min=2, max=30)])
     submit = SubmitField('Add or Edit')
+
+class addEditBlackListPrefix(FlaskForm):
+    prefix = StringField('Prefix', validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Add or Edit')

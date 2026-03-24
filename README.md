@@ -5,7 +5,7 @@ AXGeofeed - Automatic Geofeed Generator
 **A. Use Docker Engine**  
 1. Clone this project
 2. Build a docker container image: ``docker build -t axgeofeed .``
-3. Load ``db.sql`` to your database, and finalise ``config.yaml`` config. For example, please refer to [example-config.yaml](https://github.com/xosadmin/axgeofeed/blob/main/example-config.yaml)
+3. Load ``db.sql`` to your MariaDB database, and finalise ``config.yaml`` config. For example, please refer to [example-config.yaml](https://github.com/xosadmin/axgeofeed/blob/main/example-config.yaml)
 4. Use following command to run a container:
 ```
 docker run -d --name axgeofeed \

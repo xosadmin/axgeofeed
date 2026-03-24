@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Add or Edit AS-SET - AXGeofeed{% endblock %}
+{% block title %}Add or Edit Blacklist Prefix - AXGeofeed{% endblock %}
 
 {% block mainContent %}
-<h2>Add AS-SET</h2>
-<form method="POST" action="/addasset">
+<h2>Add Blacklist Prefix</h2>
+<form method="POST" action="/addblacklistprefix">
     {{ form.hidden_tag() if form else "" }}
   <div class="mb-3 mt-3">
-      <label for="asset_name">AS-SET Name</label>
-      {{ form.asset_name(class="form-control", id="asset_name", type="text", placeholder="AS-SET Name", required=true) }}
+      <label for="prefix">Prefix</label>
+      {{ form.prefix(class="form-control", id="prefix", type="text", placeholder="Prefix", required=true) }}
   </div>
   {{ form.submit(class="btn btn-primary") }}&nbsp;
   <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
