@@ -461,6 +461,10 @@ def cron():
         logging.error(f"Error occurred while performing cron: {e}")
         return jsonify({"Status": False, "Message": "Task failed."}), 500
 
+@app.route("/ping")
+def pingback():
+    return jsonify({"Status": True, "Message": "Pong"}), 200
+
 @app.route("/robots.txt")
 def robots():
     if sysconfig.get("discourage_crawl", True):
