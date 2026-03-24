@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Add or Edit User - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+{% if userid %}
+  <h2>Edit User - {{userid}}</h2>
+{% else %}
+  <h2>Add User</h2>
+{%endif%}
+{% if userid %}
+<form method="POST" action="/edituser/{{userid}}">
+{% else %}
+<form method="POST" action="/adduser">
+{% endif %}
+  <div class="form-group fillForms">
+      <label for="username">Username</label>
+      {{ form.username(class="form-control", id="username", type="text", placeholder="Username", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="password">Password</label>
+      {{ form.password(class="form-control", id="password", type="password", placeholder="Password", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="repeat_password">Repeat Password</label>
+      {{ form.password(class="form-control", id="repeat_password", type="password", placeholder="Repeat Password", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="privilege">User Privilege</label>
+      {{ form.privilege(class="form-control", id="privilege", type="dropdown", placeholder="Privilege", required=true) }}
+  </div>
+  <div class="form-group fillForms">
+      <label for="disabled">Disabled</label>
+      {{ form.disabled(class="form-control", id="disabled", type="dropdown", placeholder="Disabled...", required=true) }}
+  </div>
+  {{ form.submit() }}
+</form>
+{% endblock %}

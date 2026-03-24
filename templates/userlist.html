@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+<h2>Users</h2>
+{% if userrole == "0" %}
+<button type="button" class="btn btn-primary" onclick="window.location.href('/addprefix')">
+  <ion-icon name="add-circle-outline"></ion-icon> Add a new user</button>
+{% endif %}
+<p>&nbsp;</p>
+<table class="table">
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Username</th>
+        <th>Privilege</th>
+        <th>Disabled</th>
+          {% if userrole == "0" %}
+        <th>Edit User</th>
+        <th>Disable/Enable User</th>
+        <th>Delete User</th>
+          {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in query %}
+      <tr>
+        <td>{{query.id}}</td>
+        <td>{{query.username}}</td>
+        <td>{{query.privilege}}</td>
+          {% if query.disabled == "0" %}
+            <td>No</td>
+          {% else %}
+            <td>Yes</td>
+          {% endif %}
+        <td><a href="/edituser/{{query.id}}" title="Edit user"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
+      <td>
+          {% if query.disabled == "0" %}
+          <a href="/useraction/disable/{{ query.id }}"
+             title="Confirmation"
+             onclick="return confirm('Are you sure you want to disable this user?');">
+             <ion-icon name="body-outline"></ion-icon> Disable
+          </a>
+          {% else %}
+          <a href="/useraction/enable/{{ query.id }}"
+             title="Confirmation"
+             onclick="return confirm('Are you sure you want to enable this user?');">
+             <ion-icon name="body-outline"></ion-icon> Enable
+          </a>
+          {% endif %}
+      </td>
+        <td>
+          <a href="/useraction/delete/{{ query.id }}"
+             title="Delete confirmation"
+             onclick="return confirm('Are you sure you want to delete this user?');">
+             <ion-icon name="trash-outline"></ion-icon> Delete
+          </a>
+      </td>
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+<p>User roles: 0 - Full Administrator; 1 - Ordinary User; 2 - API Only User</p>
+{% endblock %}

@@ -3,14 +3,14 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for, R
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy import update
 from utils.ipworks import *
-from utils.bcryptworks import verifyPassword
-from models.formModel import LoginForm, addEditForm
+from utils.bcryptworks import verifyPassword, encrypt_password
+from models.formModel import LoginForm, addEditForm, addEditUserForm
 from models.loginModel import *
 from utils.yamlworks import readConf
 from utils.tools import uuidGen
 from utils.query_to_output import query_to_json, build_geofeed_csv
 from utils.cron import wrapper
-from models.sqlmodel import db, User, geofeed, userAsset
+from models.sqlmodel import db, Users, geofeed, userAsset
 import logging
 
 if not os.path.exists(os.path.join(os.getcwd(),'config.yaml')):
@@ -75,14 +75,16 @@ def index():
     else:
         username = form.username.data
         password = form.password.data
-        query = User.query.filter_by(username=username).first()
+        query = Users.query.filter_by(username=username).first()
         if not query:
             return "<script>alert('Invalid Credentials.');history.back;</script>"
         correct_password = query.password
+        if query.disabled:
+            return "<script>alert('User is disabled.');history.back;</script>"
         if_Verify = verifyPassword(password, correct_password)
         if not if_Verify:
             return "<script>alert('Invalid Credentials.');history.back;</script>"
-        user = User(query.id)
+        user = User(query.id, query.privilege)
         login_user(user)
         logging.info(f"User {username} is logged in.")
         return redirect(url_for('dashboard'))
@@ -162,6 +164,95 @@ def delete(prefix):
     db.session.delete(query)
     db.session.commit()
     return "<script>alert('Delete successful.');window.location.href='/dashboard';</script>"
+
+@app.route("/users")
+@login_required
+def usersboard():
+    current_user_privilege = current_user.role
+    query = Users.query.all()
+    if current_user_privilege == "0":
+        return render_template("userlist.html",userrole=current_user_privilege,query=query)
+    else:
+        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+
+@app.route("/adduser", methods=['GET','POST'])
+@login_required
+def adduser():
+    current_user_privilege = current_user.role
+    if current_user_privilege != "0":
+        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+    form = addEditUserForm()
+    if request.method == "GET":
+        return render_template("addedituser.html",form=form)
+    username = form.username.data
+    password = form.password.data
+    repeat_password = form.repeat_password.data
+    privilege = form.privilege.data
+    disabled = form.disabled.data
+    if password != repeat_password:
+        return "<script>alert('Passwords do not match.');history.back;</script>"
+    encoded_password = encrypt_password(password)
+    newQuery = Users(username=username, password=encoded_password, privilege=privilege, disabled=disabled)
+    db.session.add(newQuery)
+    db.session.commit()
+    return "<script>alert('User registration successful.');window.location.href='/dashboard';</script>"
+
+@app.route("/edituser/<userid>", methods=['GET','POST'])
+@login_required
+def edituser(userid):
+    current_user_privilege = current_user.role
+    if current_user_privilege != "0":
+        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+    form = addEditUserForm()
+    if request.method == "GET":
+        query = Users.query.filter_by(userid=userid).first()
+        if not query:
+            return "<script>alert('No such user.');history.back;</script>"
+        form.username.data = query.username
+        form.privilege.data = query.privilege
+        form.disabled.data = query.disabled
+        return render_template("addedituser.html", form=form, userid=query.id)
+    username = form.username.data
+    password = form.password.data
+    repeat_password = form.repeat_password.data
+    privilege = form.privilege.data
+    disabled = form.disabled.data
+    if password != repeat_password:
+        return "<script>alert('Passwords do not match.');history.back;</script>"
+    if not password:
+        newQuery = Users(username=username,privilege=privilege,disabled=disabled)
+    else:
+        encoded_password = encrypt_password(password)
+        newQuery = Users(username=username,password=encoded_password,privilege=privilege,disabled=disabled)
+    db.session.add(newQuery)
+    db.session.commit()
+    return "<script>alert('Edit successful.');window.location.href='/dashboard';</script>"
+
+@app.route("/useraction/<action>/<userid>")
+@login_required
+def useraction(action,userid):
+    current_user_privilege = current_user.role
+    if current_user_privilege != "0":
+        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+    query = Users.query.filter_by(userid=userid).first()
+    if not query:
+        return "<script>alert('No such user.');history.back;</script>"
+    if action == "delete":
+        db.session.delete(query)
+        db.session.commit()
+        return "<script>alert('Delete successful.');history.back;</script>"
+    elif action == "disable":
+        newQuery = update(Users).filter_by(userid=userid).values(disabled=True)
+        db.session.add(newQuery)
+        db.session.commit()
+        return "<script>alert('Disable successful.');history.back;</script>"
+    elif action == "enable":
+        newQuery = update(Users).filter_by(userid=userid).values(disabled=False)
+        db.session.add(newQuery)
+        db.session.commit()
+        return "<script>alert('Enable successful.');history.back;</script>"
+    else:
+        return "<script>alert('Unknown Action.');history.back;</script>"
 
 @app.route("/logout")
 @login_required
