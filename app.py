@@ -289,8 +289,8 @@ def useraction(action,userid):
     if current_user_id == userid:
         return f"<script>alert('You cannot {action} yourself.');history.back();</script>"
     if action == "delete":
-        userAsset.query.filter_by(userid=userid).delete()
         geofeed.query.filter_by(userid=userid).delete()
+        userAsset.query.filter_by(userid=userid).delete()
         db.session.delete(query)
         db.session.commit()
         return "<script>alert('Delete successful.');window.location.href='/users';</script>"
