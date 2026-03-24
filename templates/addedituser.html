@@ -13,26 +13,30 @@
 {% else %}
 <form method="POST" action="/adduser">
 {% endif %}
-  <div class="form-group fillForms">
+    {{ form.hidden_tag() if form else "" }}
+  <div class="mb-3 mt-3">
       <label for="username">Username</label>
       {{ form.username(class="form-control", id="username", type="text", placeholder="Username", required=true) }}
   </div>
-  <div class="form-group fillForms">
+  <div class="mb-3 mt-3">
       <label for="password">Password</label>
       {{ form.password(class="form-control", id="password", type="password", placeholder="Password", required=true) }}
   </div>
-  <div class="form-group fillForms">
+  <div class="mb-3 mt-3">
       <label for="repeat_password">Repeat Password</label>
-      {{ form.password(class="form-control", id="repeat_password", type="password", placeholder="Repeat Password", required=true) }}
+      {{ form.repeat_password(class="form-control", id="repeat_password", type="password", placeholder="Repeat Password", required=true) }}
   </div>
-  <div class="form-group fillForms">
+  <div class="mb-3 mt-3">
       <label for="privilege">User Privilege</label>
       {{ form.privilege(class="form-control", id="privilege", type="dropdown", placeholder="Privilege", required=true) }}
   </div>
-  <div class="form-group fillForms">
+  <div class="mb-3 mt-3">
       <label for="disabled">Disabled</label>
       {{ form.disabled(class="form-control", id="disabled", type="dropdown", placeholder="Disabled...", required=true) }}
   </div>
-  {{ form.submit() }}
+  {{ form.submit(class="btn btn-primary") }}&nbsp;
+  <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
+    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to previous page
+  </button>
 </form>
 {% endblock %}

@@ -1,14 +1,24 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - AXGeofeed{% endblock %}
+{% block title %}Users - AXGeofeed{% endblock %}
+
+{% block header %}
+<div class="container mt-3">
+  <div class="mt-4 p-5 bg-primary text-white rounded">
+    <h1>User Management</h1>
+    <p>Manage user access.</p>
+  </div>
+</div>
+<br>
+{% endblock %}
 
 {% block mainContent %}
-<h2>Users</h2>
-{% if userrole == "0" %}
-<button type="button" class="btn btn-primary" onclick="window.location.href('/addprefix')">
+{% if userrole == 0 %}
+<div style="text-align: right;">
+<button type="button" class="btn text-primary" onclick="window.location.href='/adduser'">
   <ion-icon name="add-circle-outline"></ion-icon> Add a new user</button>
+</div>
 {% endif %}
-<p>&nbsp;</p>
 <table class="table">
     <thead>
       <tr>
@@ -16,11 +26,9 @@
         <th>Username</th>
         <th>Privilege</th>
         <th>Disabled</th>
-          {% if userrole == "0" %}
         <th>Edit User</th>
         <th>Disable/Enable User</th>
         <th>Delete User</th>
-          {% endif %}
       </tr>
     </thead>
     <tbody>
@@ -29,25 +37,29 @@
         <td>{{item.id}}</td>
         <td>{{item.username}}</td>
         <td>{{item.privilege}}</td>
-          {% if item.disabled == "0" %}
+          {% if item.disabled == 0 %}
             <td>No</td>
           {% else %}
             <td>Yes</td>
           {% endif %}
         <td><a href="/edituser/{{item.id}}" title="Edit user"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
       <td>
-          {% if item.disabled == "0" %}
-          <a href="/useraction/disable/{{ item.id }}"
-             title="Confirmation"
-             onclick="return confirm('Are you sure you want to disable this user?');">
-             <ion-icon name="body-outline"></ion-icon> Disable
-          </a>
+          {% if userID == item.id %}
+          Cannot disable yourself
           {% else %}
-          <a href="/useraction/enable/{{ item.id }}"
-             title="Confirmation"
-             onclick="return confirm('Are you sure you want to enable this user?');">
-             <ion-icon name="body-outline"></ion-icon> Enable
-          </a>
+              {% if item.disabled == 0 %}
+              <a href="/useraction/disable/{{ item.id }}"
+                 title="Confirmation"
+                 onclick="return confirm('Are you sure you want to disable this user?');">
+                 <ion-icon name="body-outline"></ion-icon> Disable
+              </a>
+              {% else %}
+              <a href="/useraction/enable/{{ item.id }}"
+                 title="Confirmation"
+                 onclick="return confirm('Are you sure you want to enable this user?');">
+                 <ion-icon name="body-outline"></ion-icon> Enable
+              </a>
+              {% endif %}
           {% endif %}
       </td>
           {% if userID == item.id %}

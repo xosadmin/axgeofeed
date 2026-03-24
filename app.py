@@ -3,11 +3,11 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for, R
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy import update
 from utils.ipworks import *
-from utils.bcryptworks import verifyPassword, encrypt_password
+from utils.bcryptworks import verifyPassword, encrypt_password, encrypt_hash_base64
 from models.formModel import LoginForm, addEditForm, addEditUserForm
 from models.loginModel import *
 from utils.yamlworks import readConf
-from utils.tools import uuidGen, userIDGen
+from utils.tools import uuidGen, userIDGen, factor_disable
 from utils.query_to_output import query_to_json, build_geofeed_csv
 from utils.cron import wrapper
 from models.sqlmodel import db, Users, geofeed, userAsset
@@ -87,6 +87,8 @@ def index():
         correct_password = query.password
         if query.disabled:
             return "<script>alert('User is disabled.');history.back();</script>"
+        if query.privilege > 1:
+            return "<script>alert('User doesn't have permission to access GUI.');history.back();</script>"
         if_Verify = verifyPassword(password, correct_password)
         if not if_Verify:
             return "<script>alert('Invalid Credentials.');history.back();</script>"
@@ -98,7 +100,8 @@ def index():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    query = geofeed.query.all()
+    current_user_id = current_user.id
+    query = geofeed.query.filter_by(id=current_user_id).all()
     return render_template("dashboard.html",query=query)
 
 @app.route("/addprefix")
@@ -134,27 +137,31 @@ def prefixaction(action, prefixid):
 def doaction():
     try:
         form = addEditForm()
-        prefix = form.prefix.data
-        country_code = form.country_code.data.upper()
-        region_code = form.region_code.data.upper()
-        city = form.city.data.capitalize()
-        postal_code = form.postal_code.data.upper()
-        queryPrefix = geofeed.query.filter_by(prefix=prefix).first()
-        if not is_valid_cidr(prefix):
-            return "<script>alert('Invalid CIDR.');window.location.href='/dashboard';</script>"
-        if not queryPrefix:
-            uniqID = userIDGen()
-            commit = geofeed(id=uniqID, userid=current_user.id,assetid=current_user.id, prefix=prefix,
-                             country_code=country_code, region_code=region_code,city=city,postal_code=postal_code)
-            db.session.add(commit)
+        if form.validate_on_submit():
+            prefix = form.prefix.data
+            country_code = form.country_code.data.upper()
+            region_code = form.region_code.data.upper()
+            city = form.city.data.capitalize()
+            postal_code = form.postal_code.data.upper()
+            queryPrefix = geofeed.query.filter_by(prefix=prefix).first()
+            if not is_valid_cidr(prefix):
+                return "<script>alert('Invalid CIDR.');window.location.href='/dashboard';</script>"
+            if not queryPrefix:
+                uniqID = userIDGen()
+                commit = geofeed(id=uniqID, userid=current_user.id,assetid=current_user.id, prefix=prefix,
+                                 country_code=country_code, region_code=region_code,city=city,postal_code=postal_code)
+                db.session.add(commit)
+            else:
+                db.session.execute(update(geofeed).filter_by(prefix=prefix).values(country_code=country_code,
+                                                                         region_code=region_code,
+                                                                         city=city,
+                                                                         postal_code=postal_code
+                                                                         ))
+            db.session.commit()
+            return "<script>alert('Update successful.');window.location.href='/dashboard';</script>"
         else:
-            db.session.execute(update(geofeed).filter_by(prefix=prefix).values(country_code=country_code,
-                                                                     region_code=region_code,
-                                                                     city=city,
-                                                                     postal_code=postal_code
-                                                                     ))
-        db.session.commit()
-        return "<script>alert('Update successful.');window.location.href='/dashboard';</script>"
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System error occurred. This action is not performed.');window.location.href='/dashboard';</script>"
     except Exception as e:
         logging.error(f"Error occurred while performing action: {e}")
         return "<script>alert('System error occurred. This action is not performed.');window.location.href='/dashboard';</script>"
@@ -190,51 +197,67 @@ def adduser():
     form = addEditUserForm()
     if request.method == "GET":
         return render_template("addedituser.html",form=form)
-    username = form.username.data
-    password = form.password.data
-    repeat_password = form.repeat_password.data
-    privilege = form.privilege.data
-    disabled = form.disabled.data
-    if password != repeat_password:
-        return "<script>alert('Passwords do not match.');history.back();</script>"
-    userID = userIDGen()
-    encoded_password = encrypt_password(password)
-    newQuery = [Users(id=userID, username=username, password=encoded_password, privilege=privilege, disabled=disabled),
-                userAsset(id=userID, userID=userID, asset_name=f"{username}-MANUAL")]
-    db.session.bulk_save_objects(newQuery)
-    db.session.commit()
-    return "<script>alert('User registration successful.');window.location.href='/dashboard';</script>"
+    else:
+        if form.validate_on_submit():
+            username = form.username.data
+            password = form.password.data
+            repeat_password = form.repeat_password.data
+            privilege = form.privilege.data
+            disabled = factor_disable(form.disabled.data)
+            if password != repeat_password:
+                return "<script>alert('Passwords do not match.');history.back();</script>"
+            userID = userIDGen()
+            encoded_password = encrypt_hash_base64(encrypt_password(password))
+            newQuery = [Users(id=userID, username=username, password=encoded_password, privilege=privilege, disabled=disabled),
+                        userAsset(id=userID, userid=userID, asset_name=f"{username}-MANUAL")]
+            db.session.bulk_save_objects(newQuery)
+            db.session.commit()
+            return "<script>alert('User registration successful.');window.location.href='/dashboard';</script>"
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System error is occurred.');history.back();</script>"
 
 @app.route("/edituser/<userid>", methods=['GET','POST'])
 @login_required
 def edituser(userid):
+    current_user_id = current_user.id
     current_user_privilege = current_user.role
     if current_user_privilege != 0:
         return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
     form = addEditUserForm()
     if request.method == "GET":
-        query = Users.query.filter_by(userid=userid).first()
+        query = Users.query.filter_by(id=userid).first()
         if not query:
             return "<script>alert('No such user.');history.back();</script>"
         form.username.data = query.username
         form.privilege.data = query.privilege
         form.disabled.data = query.disabled
         return render_template("addedituser.html", form=form, userid=query.id)
-    username = form.username.data
-    password = form.password.data
-    repeat_password = form.repeat_password.data
-    privilege = form.privilege.data
-    disabled = form.disabled.data
-    if password != repeat_password:
-        return "<script>alert('Passwords do not match.');history.back();</script>"
-    if not password:
-        newQuery = Users(username=username,privilege=privilege,disabled=disabled)
     else:
-        encoded_password = encrypt_password(password)
-        newQuery = Users(username=username,password=encoded_password,privilege=privilege,disabled=disabled)
-    db.session.add(newQuery)
-    db.session.commit()
-    return "<script>alert('Edit successful.');window.location.href='/dashboard';</script>"
+        if form.validate_on_submit():
+            username = form.username.data
+            password = form.password.data
+            repeat_password = form.repeat_password.data
+            privilege = form.privilege.data
+            disabled = factor_disable(form.disabled.data)
+            if password != repeat_password:
+                return "<script>alert('Passwords do not match.');history.back();</script>"
+            if current_user_id == userid and disabled == 1:
+                return "<script>alert('Cannot disable yourself.');history.back();</script>"
+            if current_user_id == userid and privilege != current_user_privilege:
+                return "<script>alert('Cannot change privilege for yourself.');history.back();</script>"
+            if not password:
+                db.session.execute(update(Users).filter_by(id=userid).values(username=username,privilege=privilege,
+                                                                             disabled=disabled))
+            else:
+                encoded_password = encrypt_hash_base64(encrypt_password(password))
+                db.session.execute(update(Users).filter_by(id=userid).values(username=username,password=encoded_password,
+                                                                                privilege=privilege,disabled=disabled))
+            db.session.commit()
+            return "<script>alert('Edit successful.');window.location.href='/dashboard';</script>"
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System error is occurred.');history.back();</script>"
 
 @app.route("/useraction/<action>/<userid>")
 @login_required

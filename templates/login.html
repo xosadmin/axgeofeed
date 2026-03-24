@@ -1,18 +1,53 @@
-{% extends 'base.html' %}
-
-{% block title %}Login - AXGeofeed{% endblock %}
-
-{% block mainContent %}
-<h2>Authentication Required</h2>
-<form method="POST" action="/">
-  <div class="form-group fillForms">
-      <label for="username">Username</label>
-      {{ form.username(class="form-control", id="username", type="text", placeholder="Username", required=true) }}
-  </div>
-  <div class="form-group fillForms">
-      <label for="password">Password</label>
-      {{ form.password(class="form-control", id="password", placeholder="Password", required=true) }}
-  </div>
-  {{ form.submit() }}
-</form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AXGeofeed</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/login.css')}}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="brand">
+                <i class="bi bi-globe2"></i>
+                <span>AXGeofeed</span>
+            </div>
+            <div class="subtitle">
+                Please login before proceed
+            </div>
+            <form method="POST" action="/">
+                {{ form.hidden_tag() if form else "" }}
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    {% if form %}
+                        {{ form.username(class="form-control", placeholder="Enter your username") }}
+                    {% else %}
+                        <input type="text" name="username" id="username" class="form-control" placeholder="Enter your username" required>
+                    {% endif %}
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label">Password</label>
+                    {% if form %}
+                        {{ form.password(class="form-control", placeholder="Enter your password") }}
+                    {% else %}
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
+                    {% endif %}
+                </div>
+                <div class="d-grid">
+                    {% if form and form.submit %}
+                        {{ form.submit(class="btn btn-primary btn-login") }}
+                    {% else %}
+                        <button type="submit" class="btn btn-primary btn-login">Login</button>
+                    {% endif %}
+                </div>
+            </form>
+            <div class="footer-text">
+                AXGeofeed by <a href="https://ax.wiki" target="_blank">ax.wiki</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

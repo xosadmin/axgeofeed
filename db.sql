@@ -1,7 +1,7 @@
 CREATE TABLE `users` (
     `id` VARCHAR(80) PRIMARY KEY NOT NULL,
     `username` VARCHAR(80) NOT NULL,
-    `password` VARCHAR(80) NOT NULL,
+    `password` VARCHAR(1000) NOT NULL,
     `privilege` INT NOT NULL DEFAULT 0,
     `disabled` BOOLEAN DEFAULT FALSE
 );

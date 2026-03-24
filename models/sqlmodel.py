@@ -7,7 +7,7 @@ class Users(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.String(80), primary_key=True, default=userIDGen)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(80), nullable=False)
+    password = db.Column(db.String(1000), nullable=False)
     privilege = db.Column(db.Integer, nullable=False, default=0) # gid=0 -> Full Admin; gid=1 -> ordinary user; gid=2 -> API only
     disabled = db.Column(db.Boolean, default=False)
 

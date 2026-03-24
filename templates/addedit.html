@@ -4,31 +4,36 @@
 
 {% block mainContent %}
 {% if prefix %}
-  <h2>Edit Entry - {{prefix}}</h2>
+  <h2>Edit Prefix Entry - {{prefix}}</h2>
 {% else %}
-  <h2>Add Entry</h2>
+  <h2>Add Prefix Entry</h2>
 {%endif%}
 <form method="POST" action="/doaction">
-  <div class="form-group fillForms">
+    {{ form.hidden_tag() if form else "" }}
+  <div class="mb-3 mt-3">
       <label for="prefix">Prefix</label>
       {{ form.prefix(class="form-control", id="prefix", type="text", placeholder="Prefix", required=true) }}
   </div>
-  <div class="form-group fillForms">
+  <div class="mb-3 mt-3">
       <label for="country_code">Country Code (ISO3166)</label>
       {{ form.country_code(class="form-control", id="country_code", type="text", placeholder="Country Code", required=true) }}
   </div>
-  <div class="form-group fillForms">
-      <label for="region_code">region_code</label>
+  <div class="mb-3 mt-3">
+      <label for="region_code">State/Province/Territory</label>
       {{ form.region_code(class="form-control", id="region_code", type="text", placeholder="Region Code", required=true) }}
   </div>
-  <div class="form-group fillForms">
-      <label for="city">City</label>
+  <div class="mb-3 mt-3">
+      <label for="city">City/Suburb</label>
       {{ form.city(class="form-control", id="city", type="text", placeholder="City", required=true) }}
   </div>
-  <div class="form-group fillForms">
+  <div class="mb-3 mt-3">
       <label for="postal_code">Postal Code</label>
       {{ form.postal_code(class="form-control", id="postal_code", type="text", placeholder="Postal Code", required=true) }}
   </div>
-  {{ form.submit() }}
+  {{ form.submit(class="btn btn-primary") }}&nbsp;
+  <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
+    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to previous page
+  </button>
 </form>
+<br>
 {% endblock %}
