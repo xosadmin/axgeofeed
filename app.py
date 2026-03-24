@@ -360,7 +360,7 @@ def editasset(id):
     else:
         if form.validate_on_submit():
             asset = form.asset_name.data
-            query = userAsset.query.filter_by(asset_name=asset).first()
+            query = userAsset.query.filter_by(id=id).first()
             if not query:
                 return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
             if current_user_role != 0 and query.userid != current_user_id:
@@ -373,7 +373,7 @@ def editasset(id):
             asset_name = sanitize_asset(asset)
             if asset_name is None:
                 return "<script>alert('Invalid AS-SET Entry.');window.location.href='/assets';</script>"
-            db.session.execute(update(userAsset).filter_by(id=current_user_id).values(asset_name=asset))
+            db.session.execute(update(userAsset).filter_by(id=id).values(asset_name=asset))
             db.session.commit()
             return "<script>alert('Edit successful.');window.location.href='/assets';</script>"
         else:
