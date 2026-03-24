@@ -450,9 +450,12 @@ def cron():
     query = userAsset.query.all()
     queryPrefixList = geofeed.query.all()
     execute = wrapper(query, queryPrefixList)
-    if not execute:
+    if not execute and not isinstance(execute, list):
         logging.error(f"Error occurred while performing cron: Wrapper returns null or false")
         return jsonify({"Status": False, "Message": "Task failed."}), 500
+    if len(execute) == 0:
+        logging.info("Cron: No different compared to last sync.")
+        return jsonify({"Status": True, "Message": "No different compared to last sync."}), 200
     try:
         db.session.bulk_save_objects(execute)
         db.session.commit()
