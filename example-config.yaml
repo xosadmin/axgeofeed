@@ -1,0 +1,9 @@
+database:
+  server:
+  port: 3306
+  username:
+  password:
+  dbname:
+sysconfig:
+  discourage_crawl: true
+  cron_acl: []
