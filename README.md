@@ -27,6 +27,12 @@ To enable auto-sync, please ensure that:
 ```
     <frequency> curl -s "http://127.0.0.1:5000/cron"
 ```
+  
+## Multi-tenants
+AXGeofeed supports a multi-tenant architecture. A full administrator can create and manage multiple user accounts under 
+a single deployment. Each account can maintain its own AS-SET configuration, manually manage its own geofeed entries, 
+and generate an independent geofeed output. Tenant data is logically isolated so that each user can only access and manage 
+their own prefixes.
 
 ## Geofeed outputs
 #### A. CSV Format

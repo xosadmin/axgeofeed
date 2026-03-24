@@ -61,3 +61,16 @@ def clean_ipaddr(ipaddr):
         print(f"Error: {ipaddr} is not a valid ip address.")
         return None
     return ipaddr
+
+def sort_prefix(item):
+    if item.prefix:
+        prefix = item.prefix
+    else:
+        prefix = ''
+
+    if ':' in prefix:
+        is_ipv6 = True
+    else:
+        is_ipv6 = False
+
+    return (is_ipv6, prefix)

@@ -108,6 +108,9 @@ def dashboard():
         privileged = True
     else:
         query = geofeed.query.filter_by(userid=current_user_id).all()
+
+    query = sorted(query, key=sort_prefix)
+
     username = Users.query.filter_by(id=current_user_id).first().username
     return render_template("dashboard.html", query=query, username=username, privileged=privileged)
 
@@ -486,7 +489,7 @@ def internal_server_error(error):
 
 @app.errorhandler(404)
 def not_found(e):
-    logging.error("Error occurred: %s", e, exc_info=True)
+    logging.warning("404 path: %s", request.path)
     return jsonify({
         'status': False,
         'message': 'Requested resource not found.',
