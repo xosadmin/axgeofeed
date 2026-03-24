@@ -92,18 +92,19 @@ def wrapper(queryAssetResult, queryPrefixResult, blacklistPrefixList):
             existing_prefix_set.add(prefix)
     return outputs
 
-def manualRefresh(queryAssetResult, blacklistPrefixList):
+def manualRefresh(queryAssetResult, existingPrefix, blacklistPrefixList):
     if not queryAssetResult:
         return []
     outputs = []
     assets = query_asset_to_list(queryAssetResult)
+    existingPrefix = query_prefix_to_list(existingPrefix)
     blacklistPrefix = query_prefix_to_list(blacklistPrefixList)
     for asset in assets:
         if str(asset["assetname"]).endswith("_MANUAL"):
             continue
         new_prefixes = runBGPQ4(asset["assetname"])
         for prefix in new_prefixes:
-            if prefix in blacklistPrefix:
+            if prefix in blacklistPrefix or prefix in existingPrefix:
                 continue
             ipinfo = accessAPI(prefix)
             if len(ipinfo) == 0:
