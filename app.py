@@ -216,6 +216,8 @@ def adduser():
             repeat_password = form.repeat_password.data
             privilege = form.privilege.data
             disabled = factor_disable(form.disabled.data)
+            if not password or not repeat_password:
+                return "<script>alert('Passwords is empty.');history.back();</script>"
             if password != repeat_password:
                 return "<script>alert('Passwords do not match.');history.back();</script>"
             userID = userIDGen()
@@ -266,7 +268,7 @@ def edituser(userid):
                 db.session.execute(update(Users).filter_by(id=userid).values(username=username,password=encoded_password,
                                                                                 privilege=privilege,disabled=disabled))
             db.session.commit()
-            return "<script>alert('Edit successful.');window.location.href='/dashboard';</script>"
+            return "<script>alert('Edit successful.');window.location.href='/users';</script>"
         else:
             logging.error(f"Form is invalid.")
             return "<script>alert('System error is occurred.');history.back();</script>"
@@ -278,27 +280,27 @@ def useraction(action,userid):
     current_user_privilege = current_user.role
     if current_user_privilege != 0:
         return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
-    query = Users.query.filter_by(userid=userid).first()
+    query = Users.query.filter_by(id=userid).first()
     if not query:
         return "<script>alert('No such user.');history.back();</script>"
     if current_user_id == userid:
         return f"<script>alert('You cannot {action} yourself.');history.back();</script>"
     if action == "delete":
         deleteQuery = userAsset.query.filter_by(userid=userid).all()
+        deletePrefix = geofeed.query.filter_by(userid=userid).all()
         db.session.delete(query)
+        db.session.delete(deletePrefix)
         db.session.delete(deleteQuery)
         db.session.commit()
-        return "<script>alert('Delete successful.');history.back();</script>"
+        return "<script>alert('Delete successful.');window.location.href='/users';</script>"
     elif action == "disable":
-        newQuery = update(Users).filter_by(userid=userid).values(disabled=True)
-        db.session.add(newQuery)
+        db.session.execute(update(Users).filter_by(id=userid).values(disabled=True))
         db.session.commit()
-        return "<script>alert('Disable successful.');history.back();</script>"
+        return "<script>alert('Disable successful.');window.location.href='/users';</script>"
     elif action == "enable":
-        newQuery = update(Users).filter_by(userid=userid).values(disabled=False)
-        db.session.add(newQuery)
+        db.session.execute(update(Users).filter_by(id=userid).values(disabled=False))
         db.session.commit()
-        return "<script>alert('Enable successful.');history.back();</script>"
+        return "<script>alert('Enable successful.');window.location.href='/users';</script>"
     else:
         return "<script>alert('Unknown Action.');history.back();</script>"
 
@@ -328,7 +330,7 @@ def addasset():
             newQuery = userAsset(userid=current_user_id,asset_name=asset_name,systemCreated=False)
             db.session.add(newQuery)
             db.session.commit()
-            return "<script>alert('AS-SET added successfully.');window.location.href='/dashboard';</script>"
+            return "<script>alert('AS-SET added successfully.');window.location.href='/assets';</script>"
         else:
             logging.error(f"Form is invalid.")
             return "<script>alert('System error is occurred.');history.back();</script>"
@@ -346,7 +348,7 @@ def editasset(id):
         if not query:
             return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
         form.asset_name.data = query.asset_name
-        return render_template("addeditasset.html", form=form)
+        return render_template("addeditasset.html", form=form, assetid=id)
     else:
         if form.validate_on_submit():
             asset = form.asset_name.data
@@ -359,7 +361,7 @@ def editasset(id):
                 return "<script>alert('Cannot modify system-generated manual input set.');history.back();</script>"
             db.session.execute(update(userAsset).filter_by(id=current_user_id).values(asset_name=asset))
             db.session.commit()
-            return "<script>alert('Edit successful.');window.location.href='/dashboard';</script>"
+            return "<script>alert('Edit successful.');window.location.href='/assets';</script>"
         else:
             logging.error(f"Form is invalid.")
             return "<script>alert('System error is occurred.');history.back();</script>"
@@ -369,7 +371,7 @@ def editasset(id):
 def deleteasset(id):
     current_user_id = current_user.id
     current_user_role = current_user.role
-    query = userAsset.query.filter_by(id=id,userid=current_user_id).first()
+    query = userAsset.query.filter_by(id=id).first()
     if not query:
         return "<script>alert('No such AS-SET.');history.back();</script>"
     if current_user_role != 0 and current_user_id != query.userid:
@@ -378,7 +380,7 @@ def deleteasset(id):
         return f"<script>alert('Cannot delete system generated AS-SET.');history.back();</script>"
     db.session.delete(query)
     db.session.commit()
-    return "<script>alert('Delete successful.');history.back();</script>"
+    return "<script>alert('Delete successful.');window.location.href='/assets';</script>"
 
 @app.route("/logout")
 @login_required

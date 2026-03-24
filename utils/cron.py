@@ -45,10 +45,12 @@ def query_asset_to_list(query):
 
     assets = []
     for item in query:
+        if str(item.asset_name).endswith("_MANUAL"):
+            continue
         assets.append({
             "userid": item.userid,
-            "assetid": item.assetid,
-            "assetname": item.assetname,
+            "assetid": item.id,
+            "assetname": item.asset_name,
         })
     return assets
 

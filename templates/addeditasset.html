@@ -9,14 +9,14 @@
   <h2>Add AS-SET</h2>
 {%endif%}
 {% if assetid %}
-<form method="POST" action="/edituser/{{assetid}}">
+<form method="POST" action="/editasset/{{assetid}}">
 {% else %}
-<form method="POST" action="/adduser">
+<form method="POST" action="/addasset">
 {% endif %}
     {{ form.hidden_tag() if form else "" }}
   <div class="mb-3 mt-3">
       <label for="asset_name">AS-SET Name</label>
-      {{ form.asset_name(class="form-control", id="asset_name", type="text", placeholder="asset_name", required=true) }}
+      {{ form.asset_name(class="form-control", id="asset_name", type="text", placeholder="AS-SET Name", required=true) }}
   </div>
   {{ form.submit(class="btn btn-primary") }}&nbsp;
   <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
