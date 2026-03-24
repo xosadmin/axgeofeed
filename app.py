@@ -9,6 +9,7 @@ from models.loginModel import *
 from utils.yamlworks import readConf
 from utils.tools import uuidGen
 from utils.query_to_output import query_to_json, build_geofeed_csv
+from utils.cron import wrapper
 from models.sqlmodel import db, User, geofeed, userAsset
 import logging
 
@@ -43,6 +44,22 @@ if len(sysconfig) == 0:
     sys.exit(1)
 
 # Ready to fly
+
+def get_real_ip():
+    cf_ip = request.headers.get('CF-Connecting-IP')
+    if cf_ip:
+        return cf_ip
+
+    x_forwarded_for = request.headers.get('X-Forwarded-For')
+    if x_forwarded_for:
+        ips = x_forwarded_for.split(',')
+        return ips[0]
+
+    ipForOutput = clean_ipaddr(request.remote_addr)
+    if not ipForOutput:
+        ipForOutput = "169.254.169.254"
+
+    return str(ipForOutput)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -153,6 +170,7 @@ def logout():
     return render_template("logout.html")
 
 @app.route("/geofeed")
+@app.route("/geofeed.csv")
 def showcsv():
     rows = geofeed.query.all()
     csv_data = build_geofeed_csv(rows)
@@ -197,6 +215,33 @@ def geofeedjsonforasset(asset):
     rows = geofeed.query.filter_by(assetid=assetID).all()
     jsons = query_to_json(rows)
     return jsonify(jsons), 200
+
+@app.route("/cron",method=["GET"])
+def cron():
+    userIP = get_real_ip()
+    authorisedIP = sysconfig.get("cron_acl",[])
+    authorised = False
+    if not userIP or not authorisedIP:
+        return jsonify({"Status": False, "Message": "Invalid IP Address."}), 403
+    for i in authorisedIP:
+        if compare_ipaddr(userIP, i):
+            authorised = True
+            break
+    if not authorised:
+        return jsonify({"Status": False, "Message": "Insufficient permission to execute task."}), 403
+    query = userAsset.query.all()
+    queryPrefixList = geofeed.query.all()
+    execute = wrapper(query, queryPrefixList)
+    if not execute:
+        logging.error(f"Error occurred while performing cron: Wrapper returns null or false")
+        return jsonify({"Status": False, "Message": "Task failed."}), 500
+    try:
+        db.session.bulk_save_objects(execute)
+        db.session.commit()
+        return jsonify({"Status": True, "Message": "Task executed."}), 200
+    except Exception as e:
+        logging.error(f"Error occurred while performing cron: {e}")
+        return jsonify({"Status": False, "Message": "Task failed."}), 500
 
 @app.route("/robots.txt")
 def robots():

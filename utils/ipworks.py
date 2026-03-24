@@ -47,3 +47,17 @@ def compareCIDR(ipaddr,cidr):
         return True
     else:
         return False
+
+def clean_ipaddr(ipaddr):
+    if not ipaddr:
+        print("Error: Unexpected empty ip address.")
+        return None
+    ipaddr = str(ipaddr).strip()
+    if '%' in ipaddr: # Remove interface from address
+        ipaddr = ipaddr.split('%', 1)[0].strip()
+    if ipaddr.lower().startswith("::ffff:"): # Remove Bogon IP Address
+        ipaddr = ipaddr[7:].strip()
+    if not is_valid_ipaddr(ipaddr): # Remove not valid IP Address
+        print(f"Error: {ipaddr} is not a valid ip address.")
+        return None
+    return ipaddr
