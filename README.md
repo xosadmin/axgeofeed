@@ -15,15 +15,15 @@ docker run -d --name axgeofeed \
 axgeofeed
 ```
   
-**Note: the default GUI/API port is 5000/tcp. It is recommend to use reverse proxy or WAF to enhance security.**  
+**Note: the default GUI/API port is 5000/tcp. It is recommended to use reverse proxy or WAF to enhance security.**  
   
 ## Prefix List Auto Sync  
-AXGeofeed supports automatically adding prefixes to the geofeed list based on existing IRR records from the RIR database.
+AXGeofeed will use the configured AS-SET to resolve prefixes from ``IRR route / route6`` objects during scheduled sync.
 To enable auto-sync, please ensure that:
-- A valid AS-SET is associated with your ASN and has been added to the AXGeofeed database
-- Valid route and/or route6 IRR objects exist for your prefixes
-- The cron ACL address is configured in config.yaml
-- A cron task is set up to call http://127.0.0.1:5000/cron at your desired interval, for example:
+- A valid ``AS-SET`` is associated with your ASN and has been added to the AXGeofeed database
+- Valid ``route and/or route6 IRR`` objects exist for your prefixes
+- The cron ACL address is configured in ``config.yaml``
+- A cron task is set up to call ``http://127.0.0.1:5000/cron`` at your desired interval, for example:
 ```
     <frequency> curl -s "http://127.0.0.1:5000/cron"
 ```
