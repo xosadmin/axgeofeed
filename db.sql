@@ -6,6 +6,10 @@ CREATE TABLE `users` (
     `disabled` BOOLEAN DEFAULT FALSE
 );
 
+INSERT INTO `users`(username,password,privilege,disabled)
+VALUES ("admin","JDJiJDEyJFdmWFByTGpubHdPZUxTTTMyZ0hLUy42d0l6SHBscHpuTE5sd2tEVWtSMXg4enNxbEdXWlBH",
+        0,0);
+-- Create a default admin user with username and password combination of admin / admin.
 
 CREATE TABLE `user_asset` (
     `id` INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
