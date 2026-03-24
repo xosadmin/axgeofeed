@@ -8,7 +8,7 @@
 {% else %}
   <h2>Add Entry</h2>
 {%endif%}
-<form method="POST" action="/doaction/{{action}}">
+<form method="POST" action="/doaction">
   <div class="form-group fillForms">
       <label for="prefix">Prefix</label>
       {{ form.prefix(class="form-control", id="prefix", type="text", placeholder="Prefix", required=true) }}

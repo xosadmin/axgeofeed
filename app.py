@@ -7,7 +7,7 @@ from utils.bcryptworks import verifyPassword, encrypt_password
 from models.formModel import LoginForm, addEditForm, addEditUserForm
 from models.loginModel import *
 from utils.yamlworks import readConf
-from utils.tools import uuidGen
+from utils.tools import uuidGen, userIDGen
 from utils.query_to_output import query_to_json, build_geofeed_csv
 from utils.cron import wrapper
 from models.sqlmodel import db, Users, geofeed, userAsset
@@ -37,6 +37,8 @@ app.config['SECRET_KEY'] = uuidGen()
 db.init_app(app)
 
 login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "index"
 
 sysconfig = configInfo.get("sysconfig",{})
 if len(sysconfig) == 0:
@@ -63,7 +65,10 @@ def get_real_ip():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User(user_id)
+    query = Users.query.get(user_id)
+    if not query:
+        return None
+    return User(query.id, query.privilege)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -71,7 +76,7 @@ def index():
         return redirect(url_for('dashboard'))
     form = LoginForm()
     if request.method == 'GET':
-        return render_template("login.html")
+        return render_template("login.html", form=form)
     else:
         username = form.username.data
         password = form.password.data
@@ -101,15 +106,13 @@ def addprefix():
     form = addEditForm()
     return render_template("addedit.html", form=form, action="add")
 
-@app.route("/prefixaction/<action>/<prefix>")
+@app.route("/prefixaction/<action>/<prefixid>")
 @login_required
-def prefixaction(action, prefix):
+def prefixaction(action, prefixid):
     currentuserid = current_user.id
-    if not is_valid_cidr(prefix):
-        return "<script>alert('Invalid CIDR.');history.back;</script>"
     form = addEditForm()
     if action == "edit":
-        queryPrefix = geofeed.query.filter_by(prefix=prefix, userid=currentuserid).first()
+        queryPrefix = geofeed.query.filter_by(id=prefixid, userid=currentuserid).first()
         if not queryPrefix:
             return render_template("addedit.html", form=form, action=action)
         form.prefix.data = queryPrefix.prefix
@@ -121,7 +124,7 @@ def prefixaction(action, prefix):
             "addedit.html",
             form=form,
             action=action,
-            prefix=prefix
+            prefix=queryPrefix.prefix
         )
     return render_template("addedit.html", form=form, action=action)
 
@@ -131,34 +134,35 @@ def doaction():
     try:
         form = addEditForm()
         prefix = form.prefix.data
-        country_code = form.country_code.data
-        region_code = form.region_code.data
-        city = form.city.data
-        postal_code = form.postal_code.data
+        country_code = form.country_code.data.upper()
+        region_code = form.region_code.data.upper()
+        city = form.city.data.capitalize()
+        postal_code = form.postal_code.data.upper()
         queryPrefix = geofeed.query.filter_by(prefix=prefix).first()
         if not is_valid_cidr(prefix):
-            return "<script>alert('Invalid CIDR.');history.back;</script>"
+            return "<script>alert('Invalid CIDR.');window.location.href='/dashboard';</script>"
         if not queryPrefix:
-            commit = geofeed(userid=current_user.id,country_code=country_code,
-                             region_code=region_code,city=city,postal_code=postal_code)
+            uniqID = userIDGen()
+            commit = geofeed(id=uniqID, userid=current_user.id,assetid=current_user.id, prefix=prefix,
+                             country_code=country_code, region_code=region_code,city=city,postal_code=postal_code)
+            db.session.add(commit)
         else:
-            commit = update(geofeed).filter_by(prefix=prefix).values(country_code=country_code,
+            db.session.execute(update(geofeed).filter_by(prefix=prefix).values(country_code=country_code,
                                                                      region_code=region_code,
                                                                      city=city,
                                                                      postal_code=postal_code
-                                                                     )
-        db.session.add(commit)
+                                                                     ))
         db.session.commit()
         return "<script>alert('Update successful.');window.location.href='/dashboard';</script>"
     except Exception as e:
         logging.error(f"Error occurred while performing action: {e}")
         return "<script>alert('System error occurred. This action is not performed.');window.location.href='/dashboard';</script>"
 
-@app.route("/delete/<prefix>")
+@app.route("/deleteprefix/<prefixid>")
 @login_required
-def delete(prefix):
+def deleteprefix(prefixid):
     current_user_id = current_user.id
-    query = geofeed.query.filter_by(prefix=prefix,userid=current_user_id).first()
+    query = geofeed.query.filter_by(id=prefixid,userid=current_user_id).first()
     if not query:
         return "<script>alert('No such prefix, or you do not have such permission to perform action.');history.back;</script>"
     db.session.delete(query)
@@ -191,9 +195,11 @@ def adduser():
     disabled = form.disabled.data
     if password != repeat_password:
         return "<script>alert('Passwords do not match.');history.back;</script>"
+    userID = userIDGen()
     encoded_password = encrypt_password(password)
-    newQuery = Users(username=username, password=encoded_password, privilege=privilege, disabled=disabled)
-    db.session.add(newQuery)
+    newQuery = [Users(id=userID, username=username, password=encoded_password, privilege=privilege, disabled=disabled),
+                userAsset(id=userID, userID=userID, asset_name=f"{username}-MANUAL")]
+    db.session.bulk_save_objects(newQuery)
     db.session.commit()
     return "<script>alert('User registration successful.');window.location.href='/dashboard';</script>"
 
@@ -238,7 +244,9 @@ def useraction(action,userid):
     if not query:
         return "<script>alert('No such user.');history.back;</script>"
     if action == "delete":
+        deleteQuery = userAsset.query.filter_by(userid=userid).all()
         db.session.delete(query)
+        db.session.delete(deleteQuery)
         db.session.commit()
         return "<script>alert('Delete successful.');history.back;</script>"
     elif action == "disable":
@@ -307,7 +315,7 @@ def geofeedjsonforasset(asset):
     jsons = query_to_json(rows)
     return jsonify(jsons), 200
 
-@app.route("/cron",method=["GET"])
+@app.route("/cron",methods=["GET"])
 def cron():
     userIP = get_real_ip()
     authorisedIP = sysconfig.get("cron_acl",[])

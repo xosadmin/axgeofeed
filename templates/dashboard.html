@@ -4,9 +4,9 @@
 
 {% block mainContent %}
 <h2>Current Geofeed Entries</h2>
-<button type="button" class="btn btn-primary" onclick="window.location.href('/addprefix')">
-  <ion-icon name="add-circle-outline"></ion-icon> Add a new entry</button>
-<p>&nbsp;</p>
+<button type="button" class="btn btn-primary" onclick="window.location.href='/addprefix'">
+  <ion-icon name="add-circle-outline"></ion-icon> Add a new entry
+</button>
 <table class="table">
     <thead>
       <tr>
@@ -23,17 +23,17 @@
     <tbody>
       {% for item in query %}
       <tr>
-        <td>{{query.id}}</td>
-        <td>{{query.prefix}}</td>
-        <td>{{query.country_code}}</td>
-        <td>{{query.region_code}}</td>
-        <td>{{query.city}}</td>
-        <td>{{query.postal_code}}</td>
-        <td><a href="/prefixaction/edit/{{query.prefix}}" title="Edit entry"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
+        <td>{{item.id}}</td>
+        <td>{{item.prefix}}</td>
+        <td>{{item.country_code}}</td>
+        <td>{{item.region_code}}</td>
+        <td>{{item.city}}</td>
+        <td>{{item.postal_code}}</td>
+        <td><a href="/prefixaction/edit/{{item.id}}" title="Edit entry"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
         <td>
-          <a href="/delete/{{ query.prefix }}"
+          <a href="/deleteprefix/{{ item.id }}"
              title="Delete entry confirmation"
-             onclick="return confirm('Are you sure you want to delete entry {{query.prefix}}?');">
+             onclick="return confirm('Are you sure you want to delete entry {{item.prefix}}?');">
              <ion-icon name="trash-outline"></ion-icon> Delete
           </a>
       </td>

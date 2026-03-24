@@ -5,11 +5,11 @@ def query_to_json(query):
         return {}
     output = {}
     for item in query:
-        prefix = item['prefix']
-        country_code = item['country_code']
-        region_code = item['region_code']
-        city = item['city']
-        postal_code = item['postal_code']
+        prefix = item.prefix
+        country_code = item.country_code
+        region_code = item.region_code
+        city = item.city
+        postal_code = item.postal_code
         output[prefix] = {
             'country_code': country_code,
             'region_code': region_code,

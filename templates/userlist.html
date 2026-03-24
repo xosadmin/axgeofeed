@@ -26,24 +26,24 @@
     <tbody>
       {% for item in query %}
       <tr>
-        <td>{{query.id}}</td>
-        <td>{{query.username}}</td>
-        <td>{{query.privilege}}</td>
-          {% if query.disabled == "0" %}
+        <td>{{item.id}}</td>
+        <td>{{item.username}}</td>
+        <td>{{item.privilege}}</td>
+          {% if item.disabled == "0" %}
             <td>No</td>
           {% else %}
             <td>Yes</td>
           {% endif %}
-        <td><a href="/edituser/{{query.id}}" title="Edit user"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
+        <td><a href="/edituser/{{item.id}}" title="Edit user"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
       <td>
-          {% if query.disabled == "0" %}
-          <a href="/useraction/disable/{{ query.id }}"
+          {% if item.disabled == "0" %}
+          <a href="/useraction/disable/{{ item.id }}"
              title="Confirmation"
              onclick="return confirm('Are you sure you want to disable this user?');">
              <ion-icon name="body-outline"></ion-icon> Disable
           </a>
           {% else %}
-          <a href="/useraction/enable/{{ query.id }}"
+          <a href="/useraction/enable/{{ item.id }}"
              title="Confirmation"
              onclick="return confirm('Are you sure you want to enable this user?');">
              <ion-icon name="body-outline"></ion-icon> Enable
@@ -51,7 +51,7 @@
           {% endif %}
       </td>
         <td>
-          <a href="/useraction/delete/{{ query.id }}"
+          <a href="/useraction/delete/{{ item.id }}"
              title="Delete confirmation"
              onclick="return confirm('Are you sure you want to delete this user?');">
              <ion-icon name="trash-outline"></ion-icon> Delete
