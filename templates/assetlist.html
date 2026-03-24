@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}AS-SET List - AXGeofeed{% endblock %}
+
+{% block header %}
+<div class="container mt-3">
+  <div class="mt-4 p-5 bg-primary text-white rounded">
+    <h1>AS-SET Entries</h1>
+    <p>All AS-SETs that is binded in your account.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block mainContent %}
+<div style="text-align: right;">
+  <button type="button" class="btn text-primary" onclick="window.location.href='/addasset'">
+    <ion-icon name="add-circle-outline"></ion-icon> Add a new entry
+  </button>
+</div>
+<br>
+<table class="table">
+    <thead>
+      <tr>
+        <th>Entry ID</th>
+        {% if privileged %}
+        <th>User ID</th>
+        {% endif %}
+        <th>AS-SET Name</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in query %}
+      <tr>
+        <td>{{item.id}}</td>
+        {% if privileged %}
+        <td><a href="/users" title="Go to user management">{{item.userid}}</a></td>
+        {% endif %}
+        <td>{{item.asset_name}}</td>
+        {% if not item.systemCreated %}
+          <td><a href="/editasset/{{item.id}}" title="Edit entry"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
+          <td>
+            <a href="/deleteasset/{{ item.id }}"
+               title="Delete entry confirmation"
+               onclick="return confirm('Are you sure you want to delete entry {{item.asset_name}}?');">
+               <ion-icon name="trash-outline"></ion-icon> Delete
+            </a>
+          </td>
+        {% else %}
+        <td></td>
+        <td>System Generated</td>
+        {% endif %}
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+{% endblock %}

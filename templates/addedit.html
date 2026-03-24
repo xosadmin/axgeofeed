@@ -8,11 +8,15 @@
 {% else %}
   <h2>Add Prefix Entry</h2>
 {%endif%}
-<form method="POST" action="/doaction">
+<form method="POST" action="/editgeofeed">
     {{ form.hidden_tag() if form else "" }}
   <div class="mb-3 mt-3">
       <label for="prefix">Prefix</label>
       {{ form.prefix(class="form-control", id="prefix", type="text", placeholder="Prefix", required=true) }}
+  </div>
+  <div class="mb-3 mt-3">
+      <label for="display">Display in Geofeed?</label>
+      {{ form.display(class="form-control", id="display", type="dropdown", placeholder="Display in Geofeed?", required=true) }}
   </div>
   <div class="mb-3 mt-3">
       <label for="country_code">Country Code (ISO3166)</label>
@@ -32,7 +36,7 @@
   </div>
   {{ form.submit(class="btn btn-primary") }}&nbsp;
   <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
-    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to previous page
+    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to homepage
   </button>
 </form>
 <br>

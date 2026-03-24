@@ -10,6 +10,7 @@ class LoginForm(FlaskForm):
 
 class addEditForm(FlaskForm):
     prefix = StringField('Prefix', validators=[DataRequired(), Length(min=2, max=20)])
+    display = SelectField('Display In Geofeed',choices=[('1', 'Yes'), ('0', 'No')],validators=[DataRequired()])
     country_code = StringField('Country Code', validators=[DataRequired(), Length(min=2, max=2)])
     region_code = StringField('Region Code', validators=[DataRequired(), Length(min=2, max=20)])
     city = StringField('City', validators=[DataRequired(), Length(min=2, max=20)])
@@ -24,4 +25,8 @@ class addEditUserForm(FlaskForm):
     disabled = SelectField('Disabled',
                             choices=[('0', 'No'), ('1', 'Yes')],
                             validators=[DataRequired()])
+    submit = SubmitField('Add or Edit')
+
+class addEditASSet(FlaskForm):
+    asset_name = StringField('AS-SET', validators=[DataRequired(), Length(min=2, max=30)])
     submit = SubmitField('Add or Edit')

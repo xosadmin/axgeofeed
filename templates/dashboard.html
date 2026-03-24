@@ -16,10 +16,10 @@
   <button type="button" class="btn text-primary" onclick="window.location.href='/addprefix'">
     <ion-icon name="add-circle-outline"></ion-icon> Add a new entry
   </button>
-  <button type="button" class="btn text-primary" onclick="window.open('/geofeed', '_blank', 'noopener,noreferrer')">
+  <button type="button" class="btn text-primary" onclick="window.open('/geofeed/{{username}}', '_blank', 'noopener,noreferrer')">
     <ion-icon name="desktop-outline"></ion-icon> Preview Geofeed
   </button>
-  <button type="button" class="btn text-primary" onclick="window.open('/geofeed/json', '_blank', 'noopener,noreferrer')">
+  <button type="button" class="btn text-primary" onclick="window.open('/geofeed/json/{{username}}', '_blank', 'noopener,noreferrer')">
     <ion-icon name="analytics-outline"></ion-icon> JSON API
   </button>
 </div>
@@ -28,6 +28,10 @@
     <thead>
       <tr>
         <th>Entry ID</th>
+        {% if privileged %}
+        <th>User ID</th>
+        {% endif %}
+        <th>Display in Geofeed?</th>
         <th>Prefix</th>
         <th>Country/Region</th>
         <th>State/Province</th>
@@ -41,6 +45,14 @@
       {% for item in query %}
       <tr>
         <td>{{item.id}}</td>
+        {% if privileged %}
+        <th><a href="/users" title="Go to user management">{{item.userid}}</a></th>
+        {% endif %}
+        {% if item.included_in_geofeed %}
+        <td>Yes</td>
+        {% else %}
+        <td>No</td>
+        {% endif %}
         <td>{{item.prefix}}</td>
         <td><img src="https://flagcdn.com/24x18/{{item.country_code|lower}}.png" alt="{{item.country_code}}"> {{item.country_code}}</td>
         <td>{{item.region_code}}</td>

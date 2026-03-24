@@ -4,7 +4,7 @@ from flask_login import LoginManager, login_user, current_user, login_required, 
 from sqlalchemy import update
 from utils.ipworks import *
 from utils.bcryptworks import verifyPassword, encrypt_password, encrypt_hash_base64
-from models.formModel import LoginForm, addEditForm, addEditUserForm
+from models.formModel import LoginForm, addEditForm, addEditUserForm, addEditASSet
 from models.loginModel import *
 from utils.yamlworks import readConf
 from utils.tools import uuidGen, userIDGen, factor_disable
@@ -100,9 +100,16 @@ def index():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    privileged = False
     current_user_id = current_user.id
-    query = geofeed.query.filter_by(id=current_user_id).all()
-    return render_template("dashboard.html",query=query)
+    current_user_role = current_user.role
+    if current_user_role == 0:
+        query = geofeed.query.all()
+        privileged = True
+    else:
+        query = geofeed.query.filter_by(userid=current_user_id).all()
+    username = Users.query.filter_by(id=current_user_id).first().username
+    return render_template("dashboard.html", query=query, username=username, privileged=privileged)
 
 @app.route("/addprefix")
 @login_required
@@ -118,8 +125,9 @@ def prefixaction(action, prefixid):
     if action == "edit":
         queryPrefix = geofeed.query.filter_by(id=prefixid, userid=currentuserid).first()
         if not queryPrefix:
-            return render_template("addedit.html", form=form, action=action)
+            return "<script>alert('Cannot find specified prefix.');history.back();</script>"
         form.prefix.data = queryPrefix.prefix
+        form.display.data = queryPrefix.included_in_geofeed
         form.country_code.data = queryPrefix.country_code
         form.region_code.data = queryPrefix.region_code
         form.city.data = queryPrefix.city
@@ -131,14 +139,16 @@ def prefixaction(action, prefixid):
             prefix=queryPrefix.prefix
         )
     return render_template("addedit.html", form=form, action=action)
+# GUI Rendering
 
-@app.route("/doaction", methods=['POST'])
+@app.route("/editgeofeed", methods=['POST'])
 @login_required
-def doaction():
+def editgeofeed():
     try:
         form = addEditForm()
         if form.validate_on_submit():
             prefix = form.prefix.data
+            ifdisplay = factor_disable(form.display.data)
             country_code = form.country_code.data.upper()
             region_code = form.region_code.data.upper()
             city = form.city.data.capitalize()
@@ -148,15 +158,14 @@ def doaction():
                 return "<script>alert('Invalid CIDR.');window.location.href='/dashboard';</script>"
             if not queryPrefix:
                 uniqID = userIDGen()
-                commit = geofeed(id=uniqID, userid=current_user.id,assetid=current_user.id, prefix=prefix,
-                                 country_code=country_code, region_code=region_code,city=city,postal_code=postal_code)
+                commit = geofeed(id=uniqID, userid=current_user.id, assetid=current_user.id, prefix=prefix,
+                                 included_in_geofeed=ifdisplay, country_code=country_code, region_code=region_code,
+                                 city=city,postal_code=postal_code)
                 db.session.add(commit)
             else:
-                db.session.execute(update(geofeed).filter_by(prefix=prefix).values(country_code=country_code,
-                                                                         region_code=region_code,
-                                                                         city=city,
-                                                                         postal_code=postal_code
-                                                                         ))
+                db.session.execute(update(geofeed).filter_by(prefix=prefix).values(
+                    included_in_geofeed=ifdisplay, country_code=country_code, region_code=region_code,
+                                                                         city=city, postal_code=postal_code))
             db.session.commit()
             return "<script>alert('Update successful.');window.location.href='/dashboard';</script>"
         else:
@@ -170,8 +179,11 @@ def doaction():
 @login_required
 def deleteprefix(prefixid):
     current_user_id = current_user.id
-    query = geofeed.query.filter_by(id=prefixid,userid=current_user_id).first()
+    current_user_role = current_user.role
+    query = geofeed.query.filter_by(id=prefixid).first()
     if not query:
+        return "<script>alert('No such prefix, or you do not have such permission to perform action.');history.back();</script>"
+    if current_user_role != 0 and current_user_id != query.userid:
         return "<script>alert('No such prefix, or you do not have such permission to perform action.');history.back();</script>"
     db.session.delete(query)
     db.session.commit()
@@ -209,7 +221,7 @@ def adduser():
             userID = userIDGen()
             encoded_password = encrypt_hash_base64(encrypt_password(password))
             newQuery = [Users(id=userID, username=username, password=encoded_password, privilege=privilege, disabled=disabled),
-                        userAsset(id=userID, userid=userID, asset_name=f"{username}-MANUAL")]
+                        userAsset(id=userID, userid=userID, asset_name=f"{username}_MANUAL", systemCreated=True)]
             db.session.bulk_save_objects(newQuery)
             db.session.commit()
             return "<script>alert('User registration successful.');window.location.href='/dashboard';</script>"
@@ -222,7 +234,7 @@ def adduser():
 def edituser(userid):
     current_user_id = current_user.id
     current_user_privilege = current_user.role
-    if current_user_privilege != 0:
+    if current_user_privilege != 0 and current_user_id != userid:
         return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
     form = addEditUserForm()
     if request.method == "GET":
@@ -290,6 +302,84 @@ def useraction(action,userid):
     else:
         return "<script>alert('Unknown Action.');history.back();</script>"
 
+@app.route("/assets")
+@login_required
+def assets():
+    privileged = False
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    if current_user_role == 0:
+        query = userAsset.query.all()
+        privileged = True
+    else:
+        query = userAsset.query.filter_by(userid=current_user_id).all()
+    return render_template("assetlist.html",query=query,userid=current_user_id,privileged=privileged)
+
+@app.route("/addasset", methods=['GET','POST'])
+@login_required
+def addasset():
+    current_user_id = current_user.id
+    form = addEditASSet()
+    if request.method == "GET":
+        return render_template("addeditasset.html",form=form)
+    else:
+        if form.validate_on_submit():
+            asset_name = form.asset_name.data
+            newQuery = userAsset(userid=current_user_id,asset_name=asset_name,systemCreated=False)
+            db.session.add(newQuery)
+            db.session.commit()
+            return "<script>alert('AS-SET added successfully.');window.location.href='/dashboard';</script>"
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System error is occurred.');history.back();</script>"
+
+@app.route("/editasset/<id>", methods=['GET','POST'])
+@login_required
+def editasset(id):
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    form = addEditASSet()
+    if request.method == "GET":
+        query = userAsset.query.filter_by(id=id).first()
+        if current_user_role != 0 and query.userid != current_user_id:
+            return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
+        if not query:
+            return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
+        form.asset_name.data = query.asset_name
+        return render_template("addeditasset.html", form=form)
+    else:
+        if form.validate_on_submit():
+            asset = form.asset_name.data
+            query = userAsset.query.filter_by(asset_name=asset).first()
+            if not query:
+                return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
+            if current_user_role != 0 and query.userid != current_user_id:
+                return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
+            if query.systemCreated:
+                return "<script>alert('Cannot modify system-generated manual input set.');history.back();</script>"
+            db.session.execute(update(userAsset).filter_by(id=current_user_id).values(asset_name=asset))
+            db.session.commit()
+            return "<script>alert('Edit successful.');window.location.href='/dashboard';</script>"
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System error is occurred.');history.back();</script>"
+
+@app.route("/deleteasset/<id>")
+@login_required
+def deleteasset(id):
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    query = userAsset.query.filter_by(id=id,userid=current_user_id).first()
+    if not query:
+        return "<script>alert('No such AS-SET.');history.back();</script>"
+    if current_user_role != 0 and current_user_id != query.userid:
+        return f"<script>alert('You don't have permission to delete this AS-SET.');history.back();</script>"
+    if query.systemCreated:
+        return f"<script>alert('Cannot delete system generated AS-SET.');history.back();</script>"
+    db.session.delete(query)
+    db.session.commit()
+    return "<script>alert('Delete successful.');history.back();</script>"
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -297,7 +387,6 @@ def logout():
     return render_template("logout.html")
 
 @app.route("/geofeed")
-@app.route("/geofeed.csv")
 def showcsv():
     rows = geofeed.query.all()
     csv_data = build_geofeed_csv(rows)
@@ -310,13 +399,13 @@ def showcsv():
         }
     )
 
-@app.route("/geofeed/<asset>", methods=['GET'])
-def showcsvforasset(asset):
-    checkASSETID = userAsset.query.filter_by(asset_name=asset).first()
-    if not checkASSETID:
+@app.route("/geofeed/<username>", methods=['GET'])
+def showcsvforuser(username):
+    checkUserID = Users.query.filter_by(username=username).first()
+    if not checkUserID:
         return jsonify({"Status": False, "Message": "No such asset found."}), 404
-    assetID = checkASSETID.id
-    rows = geofeed.query.filter_by(assetid=assetID).all()
+    userID = checkUserID.id
+    rows = geofeed.query.filter_by(userid=userID).all()
     csv_data = build_geofeed_csv(rows)
 
     return Response(
@@ -333,13 +422,13 @@ def geofeedjson():
     jsons = query_to_json(query)
     return jsonify(jsons), 200
 
-@app.route("/geofeed/json/<asset>", methods=['GET'])
-def geofeedjsonforasset(asset):
-    checkASSETID = userAsset.query.filter_by(asset_name=asset).first()
-    if not checkASSETID:
+@app.route("/geofeed/json/<username>", methods=['GET'])
+def geofeedjsonforuser(username):
+    checkUserID = Users.query.filter_by(username=username).first()
+    if not checkUserID:
         return jsonify({"Status": False, "Message": "No such asset found."}), 404
-    assetID = checkASSETID.id
-    rows = geofeed.query.filter_by(assetid=assetID).all()
+    userID = checkUserID.id
+    rows = geofeed.query.filter_by(userid=userID).all()
     jsons = query_to_json(rows)
     return jsonify(jsons), 200
 

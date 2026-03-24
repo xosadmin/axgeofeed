@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Add or Edit AS-SET - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+{% if assetid %}
+  <h2>Edit AS-SET - {{assetid}}</h2>
+{% else %}
+  <h2>Add AS-SET</h2>
+{%endif%}
+{% if assetid %}
+<form method="POST" action="/edituser/{{assetid}}">
+{% else %}
+<form method="POST" action="/adduser">
+{% endif %}
+    {{ form.hidden_tag() if form else "" }}
+  <div class="mb-3 mt-3">
+      <label for="asset_name">AS-SET Name</label>
+      {{ form.asset_name(class="form-control", id="asset_name", type="text", placeholder="asset_name", required=true) }}
+  </div>
+  {{ form.submit(class="btn btn-primary") }}&nbsp;
+  <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
+    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to homepage
+  </button>
+</form>
+{% endblock %}

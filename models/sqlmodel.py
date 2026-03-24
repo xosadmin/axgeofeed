@@ -16,12 +16,14 @@ class userAsset(db.Model):
     id = db.Column(db.String(80), primary_key=True, default=userIDGen)
     userid = db.Column(db.String(80), db.ForeignKey('users.id'), nullable=False)
     asset_name = db.Column(db.String(80), nullable=False)
+    systemCreated = db.Column(db.Boolean, nullable=False, default=False)
 
 class geofeed(db.Model):
     __tablename__ = 'geofeed'
     id = db.Column(db.String(80), primary_key=True, default=userIDGen)
     userid = db.Column(db.String(80), db.ForeignKey('users.id'), nullable=False)
     assetid = db.Column(db.String(80), db.ForeignKey('user_asset.id'), nullable=False)
+    included_in_geofeed = db.Column(db.Boolean, nullable=False, default=True)
     prefix = db.Column(db.String(80), unique=True, nullable=False)
     country_code = db.Column(db.String(2), nullable=False, default='AQ')
     region_code = db.Column(db.String(50), nullable=True)

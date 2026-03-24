@@ -5,6 +5,8 @@ def query_to_json(query):
         return {}
     output = {}
     for item in query:
+        if not item.included_in_geofeed:
+            continue
         prefix = item.prefix
         country_code = item.country_code
         region_code = item.region_code
@@ -26,6 +28,8 @@ def build_geofeed_csv(rows, include_header=True):
         writer.writerow(["prefix", "country_code", "region_code", "city", "postal_code"])
 
     for row in rows:
+        if not row.included_in_geofeed:
+            continue
         writer.writerow([
             row.prefix,
             row.country_code,
