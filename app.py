@@ -68,6 +68,7 @@ def load_user(user_id):
     query = Users.query.get(user_id)
     if not query:
         return None
+    logging.info(f"User {query.id} (Privilege: {query.privilege}) logged in.")
     return User(query.id, query.privilege)
 
 @app.route("/", methods=['GET', 'POST'])
@@ -82,13 +83,13 @@ def index():
         password = form.password.data
         query = Users.query.filter_by(username=username).first()
         if not query:
-            return "<script>alert('Invalid Credentials.');history.back;</script>"
+            return "<script>alert('Invalid Credentials.');history.back();</script>"
         correct_password = query.password
         if query.disabled:
-            return "<script>alert('User is disabled.');history.back;</script>"
+            return "<script>alert('User is disabled.');history.back();</script>"
         if_Verify = verifyPassword(password, correct_password)
         if not if_Verify:
-            return "<script>alert('Invalid Credentials.');history.back;</script>"
+            return "<script>alert('Invalid Credentials.');history.back();</script>"
         user = User(query.id, query.privilege)
         login_user(user)
         logging.info(f"User {username} is logged in.")
@@ -164,7 +165,7 @@ def deleteprefix(prefixid):
     current_user_id = current_user.id
     query = geofeed.query.filter_by(id=prefixid,userid=current_user_id).first()
     if not query:
-        return "<script>alert('No such prefix, or you do not have such permission to perform action.');history.back;</script>"
+        return "<script>alert('No such prefix, or you do not have such permission to perform action.');history.back();</script>"
     db.session.delete(query)
     db.session.commit()
     return "<script>alert('Delete successful.');window.location.href='/dashboard';</script>"
@@ -172,19 +173,20 @@ def deleteprefix(prefixid):
 @app.route("/users")
 @login_required
 def usersboard():
+    current_user_id = current_user.id
     current_user_privilege = current_user.role
     query = Users.query.all()
-    if current_user_privilege == "0":
-        return render_template("userlist.html",userrole=current_user_privilege,query=query)
+    if current_user_privilege == 0:
+        return render_template("userlist.html",userrole=current_user_privilege,userID=current_user_id,query=query)
     else:
-        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+        return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
 
 @app.route("/adduser", methods=['GET','POST'])
 @login_required
 def adduser():
     current_user_privilege = current_user.role
-    if current_user_privilege != "0":
-        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+    if current_user_privilege != 0:
+        return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
     form = addEditUserForm()
     if request.method == "GET":
         return render_template("addedituser.html",form=form)
@@ -194,7 +196,7 @@ def adduser():
     privilege = form.privilege.data
     disabled = form.disabled.data
     if password != repeat_password:
-        return "<script>alert('Passwords do not match.');history.back;</script>"
+        return "<script>alert('Passwords do not match.');history.back();</script>"
     userID = userIDGen()
     encoded_password = encrypt_password(password)
     newQuery = [Users(id=userID, username=username, password=encoded_password, privilege=privilege, disabled=disabled),
@@ -207,13 +209,13 @@ def adduser():
 @login_required
 def edituser(userid):
     current_user_privilege = current_user.role
-    if current_user_privilege != "0":
-        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+    if current_user_privilege != 0:
+        return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
     form = addEditUserForm()
     if request.method == "GET":
         query = Users.query.filter_by(userid=userid).first()
         if not query:
-            return "<script>alert('No such user.');history.back;</script>"
+            return "<script>alert('No such user.');history.back();</script>"
         form.username.data = query.username
         form.privilege.data = query.privilege
         form.disabled.data = query.disabled
@@ -224,7 +226,7 @@ def edituser(userid):
     privilege = form.privilege.data
     disabled = form.disabled.data
     if password != repeat_password:
-        return "<script>alert('Passwords do not match.');history.back;</script>"
+        return "<script>alert('Passwords do not match.');history.back();</script>"
     if not password:
         newQuery = Users(username=username,privilege=privilege,disabled=disabled)
     else:
@@ -237,30 +239,33 @@ def edituser(userid):
 @app.route("/useraction/<action>/<userid>")
 @login_required
 def useraction(action,userid):
+    current_user_id = current_user.id
     current_user_privilege = current_user.role
-    if current_user_privilege != "0":
-        return "<script>alert('You do not have such permission to perform action.');history.back;</script>"
+    if current_user_privilege != 0:
+        return "<script>alert('You do not have such permission to perform action.');history.back();</script>"
     query = Users.query.filter_by(userid=userid).first()
     if not query:
-        return "<script>alert('No such user.');history.back;</script>"
+        return "<script>alert('No such user.');history.back();</script>"
+    if current_user_id == userid:
+        return f"<script>alert('You cannot {action} yourself.');history.back();</script>"
     if action == "delete":
         deleteQuery = userAsset.query.filter_by(userid=userid).all()
         db.session.delete(query)
         db.session.delete(deleteQuery)
         db.session.commit()
-        return "<script>alert('Delete successful.');history.back;</script>"
+        return "<script>alert('Delete successful.');history.back();</script>"
     elif action == "disable":
         newQuery = update(Users).filter_by(userid=userid).values(disabled=True)
         db.session.add(newQuery)
         db.session.commit()
-        return "<script>alert('Disable successful.');history.back;</script>"
+        return "<script>alert('Disable successful.');history.back();</script>"
     elif action == "enable":
         newQuery = update(Users).filter_by(userid=userid).values(disabled=False)
         db.session.add(newQuery)
         db.session.commit()
-        return "<script>alert('Enable successful.');history.back;</script>"
+        return "<script>alert('Enable successful.');history.back();</script>"
     else:
-        return "<script>alert('Unknown Action.');history.back;</script>"
+        return "<script>alert('Unknown Action.');history.back();</script>"
 
 @app.route("/logout")
 @login_required

@@ -50,13 +50,17 @@
           </a>
           {% endif %}
       </td>
+          {% if userID == item.id %}
+          <td>Cannot delete yourself</td>
+          {% else %}
         <td>
           <a href="/useraction/delete/{{ item.id }}"
              title="Delete confirmation"
              onclick="return confirm('Are you sure you want to delete this user?');">
              <ion-icon name="trash-outline"></ion-icon> Delete
           </a>
-      </td>
+        </td>
+          {% endif %}
       </tr>
       {%endfor%}
     </tbody>
