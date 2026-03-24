@@ -481,5 +481,13 @@ def internal_server_error(error):
         'message': 'System cannot handle your request',
     }), 500
 
+@app.errorhandler(404)
+def not_found(e):
+    logging.error("Error occurred: %s", e, exc_info=True)
+    return jsonify({
+        'status': False,
+        'message': 'Requested resource not found.',
+    }), 404
+
 if __name__ == "__main__":
     app.run(debug=True)
