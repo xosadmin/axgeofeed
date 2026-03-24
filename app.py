@@ -10,6 +10,7 @@ from utils.yamlworks import readConf
 from utils.tools import uuidGen, userIDGen, factor_disable
 from utils.query_to_output import query_to_json, build_geofeed_csv
 from utils.cron import wrapper
+from utils.assetworks import sanitize_asset
 from models.sqlmodel import db, Users, geofeed, userAsset
 import logging
 
@@ -328,6 +329,12 @@ def addasset():
     else:
         if form.validate_on_submit():
             asset_name = form.asset_name.data
+            lookup_existing = userAsset.query.filter_by(asset_name=asset_name).first()
+            if lookup_existing:
+                return "<script>alert('AS-SET is added by other user. Please contact admin for assistant.');window.location.href='/assets';</script>"
+            asset_name = sanitize_asset(asset_name)
+            if asset_name is None:
+                return "<script>alert('Invalid AS-SET Entry.');window.location.href='/assets';</script>"
             newQuery = userAsset(userid=current_user_id,asset_name=asset_name,systemCreated=False)
             db.session.add(newQuery)
             db.session.commit()
@@ -360,6 +367,12 @@ def editasset(id):
                 return "<script>alert('No such AS-SET, or do not have permission to edit.');history.back();</script>"
             if query.systemCreated:
                 return "<script>alert('Cannot modify system-generated manual input set.');history.back();</script>"
+            lookup_existing = userAsset.query.filter_by(asset_name=asset).first()
+            if lookup_existing:
+                return "<script>alert('AS-SET is added by other user. Please contact admin for assistant.');window.location.href='/assets';</script>"
+            asset_name = sanitize_asset(asset)
+            if asset_name is None:
+                return "<script>alert('Invalid AS-SET Entry.');window.location.href='/assets';</script>"
             db.session.execute(update(userAsset).filter_by(id=current_user_id).values(asset_name=asset))
             db.session.commit()
             return "<script>alert('Edit successful.');window.location.href='/assets';</script>"

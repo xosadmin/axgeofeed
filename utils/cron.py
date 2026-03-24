@@ -1,8 +1,11 @@
 import subprocess
 from models.sqlmodel import geofeed
+from utils.assetworks import sanitize_asset
 from utils.ipapi import accessAPI
 
 def runBGPQ4(asset):
+    asset = sanitize_asset(asset)
+
     commands = [
         ["bgpq4", "-4", "-F", "%n/%l\n", asset],
         ["bgpq4", "-6", "-F", "%n/%l\n", asset]
@@ -16,7 +19,7 @@ def runBGPQ4(asset):
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                timeout=90
+                timeout=80
             )
             output = run.stdout.decode("utf-8")
 
