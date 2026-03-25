@@ -311,12 +311,12 @@ def useraction(action,userid):
 def syncprefix():
     current_user_id = current_user.id
     query = userAsset.query.filter_by(userid=current_user_id).all()
-    blacklistPrefixList = blacklistPrefix.query.all()
+    blacklistPrefixList = blacklistPrefix.query.filter_by(userid=current_user_id).all()
     existingPrefix = geofeed.query.filter_by(userid=current_user_id).all()
     if not query:
         return "<script>alert('No AS-SET associated with this user.');history.back();</script>"
     if len(query) == 1 and query[0].asset_name.endswith("_MANUAL"):
-        return "<script>alert('Please setup AS-SET in your dashboard.');history.back();</script>"
+        return "<script>alert('No valid AS-SET. Please setup AS-SET in your dashboard.');history.back();</script>"
     outputs = manualRefresh(query, existingPrefix, blacklistPrefixList)
     db.session.bulk_save_objects(outputs)
     db.session.commit()
