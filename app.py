@@ -432,6 +432,7 @@ def logout():
     return render_template("logout.html")
 
 @app.route("/geofeed")
+@app.route("/geofeed.csv")
 def showcsv():
     rows = geofeed.query.all()
     csv_data = build_geofeed_csv(rows)
@@ -445,6 +446,7 @@ def showcsv():
     )
 
 @app.route("/geofeed/<username>", methods=['GET'])
+@app.route("/geofeed/<username>.csv", methods=['GET'])
 def showcsvforuser(username):
     checkUserID = Users.query.filter_by(username=username).first()
     if not checkUserID:
