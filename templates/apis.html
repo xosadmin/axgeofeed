@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}API Tokens - AXGeofeed{% endblock %}
+
+{% block header %}
+<div class="container mt-3">
+  <div class="mt-4 p-5 bg-primary text-white rounded">
+    <h1>API Tokens</h1>
+    <p>All API Tokens that is associated to your account.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block mainContent %}
+<div style="text-align: right;">
+  <button type="button" class="btn text-primary" onclick="window.location.href='/addapi'">
+    <ion-icon name="add-circle-outline"></ion-icon> Add a new entry
+  </button>
+</div>
+<br>
+<table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Entry ID</th>
+        {% if privileged %}
+        <th>User ID</th>
+        {% endif %}
+        <th>Read Only</th>
+        <th>Valid Until</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in query %}
+      <tr>
+        <td>{{item.id}}</td>
+        {% if privileged %}
+        <td><a href="/users" title="Go to user management">{{item.userid}}</a></td>
+        {% endif %}
+        {% if item.ifReadOnly %}
+          <td>Yes</td>
+        {% else %}
+          <td>No</td>
+        {% endif %}
+          <td>{{item.validDate}}</td>
+          <td>
+            <a href="/deleteapi/{{ item.id }}"
+               title="Delete entry confirmation"
+               onclick="return confirm('Are you sure you want to delete entry {{item.asset_name}}?');">
+               <ion-icon name="trash-outline"></ion-icon> Delete
+            </a>
+          </td>
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Add or Edit Entry - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+
+<h2>Add API Entry</h2>
+<form method="POST" action="/addapi">
+    {{ form.hidden_tag() if form else "" }}
+  <div class="mb-3 mt-3">
+      <label for="readonly">Is it read-only token?</label>
+      {{ form.readonly(class="form-control", id="readonly", type="dropdown", placeholder="Readonly API?", required=true) }}
+      <small><span style="font-weight: bold;">Note:</span> If choose yes, no writable api could be performed by this token.</small>
+  </div>
+  <div class="mb-3 mt-3">
+      <label for="validDate">Valid Date (In <span style="font-weight: bold;">YYYY-mm-dd</span> format)</label>
+      {{ form.validDate(class="form-control", id="validDate", type="text", placeholder="YYYY-mm-dd", required=true) }}
+  </div>
+  {{ form.submit(class="btn btn-primary") }}&nbsp;
+  <button type="button" class="btn btn-danger" onclick="window.location.href='/apis'">
+    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to API Dashboard
+  </button>
+</form>
+<br>
+{% endblock %}

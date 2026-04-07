@@ -35,3 +35,11 @@ class blacklistPrefix(db.Model):
     id = db.Column(db.String(80), primary_key=True, default=userIDGen)
     userid = db.Column(db.String(80), db.ForeignKey('users.id'), nullable=False)
     prefix = db.Column(db.String(80), nullable=False)
+
+class apis(db.Model):
+    __tablename__ = 'apis'
+    id = db.Column(db.String(80), primary_key=True, default=userIDGen)
+    userid = db.Column(db.String(80), db.ForeignKey('users.id'), nullable=False)
+    apiToken = db.Column(db.String(80), nullable=False)
+    ifReadOnly = db.Column(db.Boolean, nullable=False, default=False)
+    validDate = db.Column(db.DateTime, nullable=False)

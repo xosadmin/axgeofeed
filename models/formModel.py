@@ -34,3 +34,8 @@ class addEditASSet(FlaskForm):
 class addEditBlackListPrefix(FlaskForm):
     prefix = StringField('Prefix', validators=[DataRequired(), Length(min=2, max=20)])
     submit = SubmitField('Add or Edit')
+
+class addAPI(FlaskForm):
+    readonly = SelectField('Readonly',choices=[('0', 'No'), ('1', 'Yes')],validators=[DataRequired()])
+    validDate = StringField('Valid Date', validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Add')

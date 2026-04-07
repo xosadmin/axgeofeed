@@ -4,14 +4,14 @@ from flask_login import LoginManager, login_user, current_user, login_required, 
 from sqlalchemy import update
 from utils.ipworks import *
 from utils.bcryptworks import verifyPassword, encrypt_password, encrypt_hash_base64
-from models.formModel import LoginForm, addEditForm, addEditUserForm, addEditASSet, addEditBlackListPrefix
+from models.formModel import LoginForm, addEditForm, addEditUserForm, addEditASSet, addEditBlackListPrefix, addAPI
 from models.loginModel import *
 from utils.yamlworks import readConf
-from utils.tools import uuidGen, userIDGen, factor_disable
+from utils.tools import uuidGen, userIDGen, factor_disable, dateConvert
 from utils.query_to_output import query_to_json, build_geofeed_csv
 from utils.cron import wrapper, manualRefresh
 from utils.assetworks import sanitize_asset
-from models.sqlmodel import db, Users, geofeed, userAsset, blacklistPrefix
+from models.sqlmodel import db, Users, geofeed, userAsset, blacklistPrefix, apis
 import logging
 
 if not os.path.exists(os.path.join(os.getcwd(),'config.yaml')):
@@ -424,6 +424,61 @@ def deleteblacklistprefix(id):
     db.session.delete(query)
     db.session.commit()
     return "<script>alert('Delete successful.');window.location.href='/blacklistprefix';</script>"
+
+@app.route("/apis")
+@login_required
+def apisDashboard():
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    privileged = False
+    if current_user_role == 0:
+        privileged = True
+    try:
+        query = apis.query.filter_by(userid=current_user_id).all()
+        return render_template("apis.html",query=query,privileged=privileged)
+    except Exception as e:
+        logging.error(f"Error when fetching API: {e}")
+        return "<script>alert('System Error Occurred.');history.back();</script>"
+
+@app.route("/addapi", methods=['GET','POST'])
+@login_required
+def addapis():
+    form = addAPI()
+    if request.method == "GET":
+        return render_template("addapi.html",form=form)
+    current_user_id = current_user.id
+    try:
+        if form.validate_on_submit():
+            ifReadOnly = factor_disable(form.readonly.data)
+            validDate = form.validDate.data
+            validDate_converted = dateConvert(validDate)
+            if not validDate_converted:
+                return "<script>alert('Invalid Date.');history.back();</script>"
+            tokenID = uuidGen()
+            newQuery = apis(apiToken=tokenID,userid=current_user_id,ifReadOnly=ifReadOnly,validDate=validDate_converted)
+            db.session.add(newQuery)
+            db.session.commit()
+            return render_template("showapi.html",tokenID=tokenID)
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System Error Occurred.');history.back();</script>"
+    except Exception as e:
+        logging.critical(f"Error when adding API: {e}")
+        return "<script>alert('System Error Occurred.');history.back();</script>"
+
+@app.route("/deleteapi/<id>")
+@login_required
+def deleteapi(id):
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    query = apis.query.filter_by(id=id).first()
+    if not query:
+        return "<script>alert('No such API Token.');history.back();</script>"
+    if current_user_role != 0 and current_user_id != query.userid:
+        return f"<script>alert('You don't have permission to delete this prefix.');history.back();</script>"
+    db.session.delete(query)
+    db.session.commit()
+    return "<script>alert('Delete successful.');window.location.href='/apis';</script>"
 
 @app.route("/logout")
 @login_required

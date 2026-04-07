@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}API Tokens - AXGeofeed{% endblock %}
+
+{% block header %}
+<div class="container mt-3">
+  <div class="mt-4 p-5 bg-primary text-white rounded">
+    <h1>API Tokens</h1>
+    <p>All API Tokens that is associated to your account.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block mainContent %}
+<div style="text-align: center">
+    <h3>Here's your new API Token</h3>
+    <p></p>
+    <h5 style="font-weight: bold; color: red;">{{tokenID}}</h5>
+</div>
+<p>&nbsp;</p>
+<div>
+    <h5>Please note that:</h5>
+    <ul>
+        <li style="font-weight: bold; color: red;">This API Token will only show once.</li>
+        <li>If you plan to switch API Token between readonly and full access, please delete and create a new token</li>
+        <li>If you disclose the token, please delete it as soon as possible.</li>
+    </ul>
+    <div style="text-align: center">
+        <button type="button" class="btn btn-primary" onclick="window.location.href='/apis'">
+            Back to API Dashboard
+       </button>
+    </div>
+</div>
+{% endblock %}

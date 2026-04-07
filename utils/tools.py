@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 def uuidGen():
     return str(uuid.uuid4())
@@ -13,3 +14,10 @@ def factor_disable(rawvalue):
     else:
         disabled = True
     return disabled
+
+def dateConvert(input):
+    try:
+        datetime_obj = datetime.strptime(input, "%Y-%m-%d")
+        return datetime_obj
+    except ValueError:
+        return False
