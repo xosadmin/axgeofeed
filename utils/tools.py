@@ -21,3 +21,10 @@ def dateConvert(input):
         return datetime_obj
     except ValueError:
         return False
+
+def checkIfAPIValid(datetimes):
+    today = datetime.now().date()
+    if today > datetimes.validDate.date():
+        return False
+    else:
+        return True

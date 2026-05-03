@@ -41,7 +41,7 @@ CREATE TABLE `blacklist_prefix` (
     `id` VARCHAR(80) PRIMARY KEY NOT NULL,
     `userid` VARCHAR(80) NOT NULL,
     `prefix` VARCHAR(80) NOT NULL
-)
+);
 
 CREATE TABLE `apis` (
     `id` VARCHAR(80) PRIMARY KEY NOT NULL,
@@ -50,4 +50,4 @@ CREATE TABLE `apis` (
     `ifReadOnly` BOOLEAN NOT NULL DEFAULT FALSE,
     `validDate` DATE NOT NULL,
     CONSTRAINT `apis_fk_userid` FOREIGN KEY (`userid`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-)
+);
