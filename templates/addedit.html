@@ -8,7 +8,7 @@
 {% else %}
   <h2>Add Prefix Entry</h2>
 {%endif%}
-<form method="POST" action="/editgeofeed">
+<form method="POST" action="/gui/editgeofeed">
     {{ form.hidden_tag() if form else "" }}
   <div class="mb-3 mt-3">
       <label for="prefix">Prefix</label>

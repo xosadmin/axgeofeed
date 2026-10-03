@@ -35,7 +35,7 @@
       <tr>
         <td>{{item.id}}</td>
         {% if privileged %}
-        <td><a href="/users" title="Go to user management">{{item.userid}}</a></td>
+        <td><a href="/gui/users" title="Go to user management">{{item.userid}}</a></td>
         {% endif %}
         {% if item.ifReadOnly %}
           <td>Yes</td>
@@ -44,7 +44,7 @@
         {% endif %}
           <td>{{item.validDate}}</td>
           <td>
-            <a href="/deleteapi/{{ item.id }}"
+            <a href="/gui/deleteapi/{{ item.id }}"
                title="Delete entry confirmation"
                onclick="return confirm('Are you sure you want to delete entry {{item.asset_name}}?');">
                <ion-icon name="trash-outline"></ion-icon> Delete

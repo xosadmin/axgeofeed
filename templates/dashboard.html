@@ -49,7 +49,7 @@
       <tr>
         <td>{{item.id}}</td>
         {% if privileged %}
-        <th><a href="/users" title="Go to user management">{{item.userid}}</a></th>
+        <th><a href="/gui/users" title="Go to user management">{{item.userid}}</a></th>
         {% endif %}
         {% if item.included_in_geofeed %}
         <td>Yes</td>
@@ -61,9 +61,9 @@
         <td>{{item.region_code}}</td>
         <td>{{item.city}}</td>
         <td>{{item.postal_code}}</td>
-        <td><a href="/prefixaction/edit/{{item.id}}" title="Edit entry"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
+        <td><a href="/gui/prefixaction/edit/{{item.id}}" title="Edit entry"><ion-icon name="create-outline"></ion-icon> Edit</a></td>
         <td>
-          <a href="/deleteprefix/{{ item.id }}"
+          <a href="/gui/deleteprefix/{{ item.id }}"
              title="Delete entry confirmation"
              onclick="return confirm('Are you sure you want to delete entry {{item.prefix}}?');">
              <ion-icon name="trash-outline"></ion-icon> Delete

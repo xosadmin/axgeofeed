@@ -9,9 +9,9 @@
   <h2>Add User</h2>
 {%endif%}
 {% if userid %}
-<form method="POST" action="/edituser/{{userid}}">
+<form method="POST" action="/gui/edituser/{{userid}}">
 {% else %}
-<form method="POST" action="/adduser">
+<form method="POST" action="/gui/adduser">
 {% endif %}
     {{ form.hidden_tag() if form else "" }}
   <div class="mb-3 mt-3">
@@ -35,7 +35,7 @@
       {{ form.disabled(class="form-control", id="disabled", type="dropdown", placeholder="Disabled...", required=true) }}
   </div>
   {{ form.submit(class="btn btn-primary") }}&nbsp;
-  <button type="button" class="btn btn-danger" onclick="window.location.href='/dashboard'">
+  <button type="button" class="btn btn-danger" onclick="window.location.href='/gui/dashboard'">
     <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to homepage
   </button>
 </form>
