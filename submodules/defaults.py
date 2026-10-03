@@ -1,13 +1,13 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, redirect, Response
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 defaults = Blueprint('defaults', __name__)
 
-@defaults.route('/')
+@defaults.route("/")
 def index():
-    return jsonify({"Status": False, "Message": "Hello World."}), 200
+    return redirect("/gui/", code=301)
 
 @defaults.route('/robots.txt')
 def robots():
