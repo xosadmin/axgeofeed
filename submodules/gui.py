@@ -251,7 +251,7 @@ def edituser(userid):
                 return "<script>alert('Passwords do not match.');history.back();</script>"
             if current_user_id == userid and disabled == 1:
                 return "<script>alert('Cannot disable yourself.');history.back();</script>"
-            if current_user_id == userid and privilege != current_user_privilege:
+            if current_user_id == userid and int(privilege) != int(current_user_privilege):
                 return "<script>alert('Cannot change privilege for yourself.');history.back();</script>"
             if not password:
                 db.session.execute(update(Users).filter_by(id=userid).values(username=username,privilege=privilege,
