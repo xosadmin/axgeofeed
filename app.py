@@ -37,7 +37,7 @@ def create_app(config=None):
     app.register_blueprint(api, url_prefix="/api")
     app.register_blueprint(guis, url_prefix="/gui")
     app.register_blueprint(crons, url_prefix="/cron")
-    app.register_blueprint(csvrender, url_prefix="/output")
+    app.register_blueprint(csvrender, url_prefix="/geofeed")
     db.init_app(app) # Create a new instance. db has been defined in sqlmodel.py
     login_manager.init_app(app)
 

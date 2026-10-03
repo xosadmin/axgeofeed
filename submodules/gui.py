@@ -87,7 +87,7 @@ def index():
         logging.info(f"User {username} is logged in.")
         return redirect(url_for('.dashboard'))
 
-@guis.route("/gui/dashboard")
+@guis.route("/dashboard")
 @login_required
 def dashboard():
     privileged = False

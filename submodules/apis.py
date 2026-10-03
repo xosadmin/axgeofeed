@@ -39,7 +39,7 @@ def token_to_user(token):
         "isValid": checkIfAPIValid(query.validDate)
     }
 
-@api.route("/api/entry/<action>/<entry_type>", methods=["POST"])
+@api.route("/entry/<action>/<entry_type>", methods=["POST"])
 def addentryapi(action, entry_type):
     auth_header = request.headers.get("Authorization")
 

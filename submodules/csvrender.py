@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, Response
 from routes import configRead
 from utils.query_to_output import query_to_json, build_geofeed_csv
 from models.sqlmodel import Users, geofeed
@@ -10,8 +10,8 @@ logging.basicConfig(level=logging.DEBUG)
 csvrender = Blueprint('csvrender', __name__)
 sysconfig = configRead("sysconfig")
 
-@csvrender.route("/geofeed/<username>", methods=['GET'])
-@csvrender.route("/geofeed/<username>.csv", methods=['GET'])
+@csvrender.route("/<username>", methods=['GET'])
+@csvrender.route("/<username>.csv", methods=['GET'])
 def showcsvforuser(username):
     checkUserID = Users.query.filter_by(username=username).first()
     if not checkUserID:
@@ -28,13 +28,13 @@ def showcsvforuser(username):
         }
     )
 
-@csvrender.route("/geofeed/json")
+@csvrender.route("/json")
 def geofeedjson():
     query = geofeed.query.all()
     jsons = query_to_json(query)
     return jsonify(jsons), 200
 
-@csvrender.route("/geofeed/json/<username>", methods=['GET'])
+@csvrender.route("/json/<username>", methods=['GET'])
 def geofeedjsonforuser(username):
     checkUserID = Users.query.filter_by(username=username).first()
     if not checkUserID:

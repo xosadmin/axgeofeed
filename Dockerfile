@@ -1,9 +1,9 @@
-FROM python:3.14.0-trixie
+FROM python:3.14-slim-trixie
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y --fix-missing \
-    && apt-get install nano vim bgpq4 python3-venv python3-pip -y --no-install-recommends \
+    && apt-get install bgpq4 python3-venv python3-pip -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
