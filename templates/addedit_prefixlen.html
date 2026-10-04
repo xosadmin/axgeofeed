@@ -8,7 +8,7 @@
 {% else %}
   <h2>Add Prefixlen Entry</h2>
 {%endif%}
-<form method="POST" action="/gui/editprefixlen">
+<form method="POST" action="/gui/addprefixlen">
     {{ form.hidden_tag() if form else "" }}
   <div class="mb-3 mt-3">
       <label for="prefix">Prefix</label>
