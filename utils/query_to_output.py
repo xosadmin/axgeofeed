@@ -47,15 +47,15 @@ def build_prefixlen_csv(rows, include_header=True):
     writer = csv.writer(output)
 
     if include_header:
-        writer.writerow(["prefix", "End-Site Prefix Length", "End-site Amount"])
+        writer.writerow(["prefix", "Allocated Length", "Site Count"])
 
     for row in rows:
-        if not row.included_in_geofeed:
+        if not row.include_in_prefixlen:
             continue
         writer.writerow([
             row.prefix,
-            row.end_site_prefix_len,
-            row.end_sites
+            row.allocation_len,
+            row.site_count
         ])
 
     csv_data = output.getvalue()
