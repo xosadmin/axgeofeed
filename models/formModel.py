@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, Optional
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import Length, Optional, DataRequired, NumberRange
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
@@ -20,8 +19,8 @@ class addEditForm(FlaskForm):
 class addEditPrfxLenForm(FlaskForm):
     prefix = StringField('Prefix', validators=[DataRequired(), Length(min=2, max=80)])
     display = SelectField('Display In Prefixlen CSV',choices=[('1', 'Yes'), ('0', 'No')],validators=[DataRequired()])
-    allocation_len = IntegerField('Allocation Length', validators=[NumberRange(min=24, max=128)])
-    site_count = IntegerField('Site Count', validators=[NumberRange(min=1)])
+    allocation_len = IntegerField('Allocation Length', validators=[Optional(), NumberRange(min=24, max=128)])
+    site_count = IntegerField('Site Count', validators=[Optional(), NumberRange(min=1)])
     submit = SubmitField('Add or Edit')
 
 class addEditUserForm(FlaskForm):

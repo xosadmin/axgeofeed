@@ -390,9 +390,10 @@ def addprefixlen():
     else:
         if form.validate_on_submit():
             prefix = form.prefix.data
+            display = form.display.data
             allocation_len = form.allocation_len.data
             site_count = form.site_count.data
-            lookup_existing = prefixlen.query.filter_by(prefix=prefix).prefix()
+            lookup_existing = prefixlen.query.filter_by(prefix=prefix).first()
             if lookup_existing:
                 return ("<script>alert('Prefixlen entry is added by other user. Please contact admin for assistant.');"
                         "window.location.href='/gui/prefixlen';</script>")
@@ -404,7 +405,8 @@ def addprefixlen():
             if allocation_len and (allocation_len < 1 or allocation_len > maxlen):
                 return ("<script>alert('Invalid allocation length!');"
                         "window.location.href='/gui/prefixlen';</script>")
-            newQuery = prefixlen(userid=current_user_id,prefix=prefix,allocation_len=allocation_len,site_count=site_count)
+            newQuery = prefixlen(userid=current_user_id,include_in_prefixlen=display,prefix=prefix,
+                                 allocation_len=allocation_len,site_count=site_count)
             db.session.add(newQuery)
             db.session.commit()
             return "<script>alert('Prefixlen entry added successfully.');window.location.href='/gui/prefixlen';</script>"
