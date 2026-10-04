@@ -390,7 +390,7 @@ def addprefixlen():
     else:
         if form.validate_on_submit():
             prefix = form.prefix.data
-            display = form.display.data
+            display = factor_disable(form.display.data)
             allocation_len = form.allocation_len.data
             site_count = form.site_count.data
             lookup_existing = prefixlen.query.filter_by(prefix=prefix).first()
