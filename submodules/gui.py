@@ -369,7 +369,7 @@ def deleteasset(id):
 
 @guis.route("/prefixlen")
 @login_required
-def prefixlen():
+def showprefixlen():
     privileged = False
     current_user_id = current_user.id
     current_user_role = current_user.role
