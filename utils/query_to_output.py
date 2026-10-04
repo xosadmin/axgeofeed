@@ -41,3 +41,23 @@ def build_geofeed_csv(rows, include_header=True):
     csv_data = output.getvalue()
     output.close()
     return csv_data
+
+def build_prefixlen_csv(rows, include_header=True):
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    if include_header:
+        writer.writerow(["prefix", "End-Site Prefix Length", "End-site Amount"])
+
+    for row in rows:
+        if not row.included_in_geofeed:
+            continue
+        writer.writerow([
+            row.prefix,
+            row.end_site_prefix_len,
+            row.end_sites
+        ])
+
+    csv_data = output.getvalue()
+    output.close()
+    return csv_data

@@ -9,9 +9,10 @@ from utils.bcryptworks import verifyPassword, encrypt_password, encrypt_hash_bas
 from utils.tools import uuidGen, userIDGen, factor_disable, dateConvert, checkIfAPIValid
 from utils.assetworks import sanitize_asset
 from utils.cron import manualRefresh
-from models.formModel import LoginForm, addEditForm, addEditUserForm, addEditASSet, addEditBlackListPrefix, addAPI
+from models.formModel import (LoginForm, addEditForm, addEditUserForm, addEditASSet,
+                              addEditBlackListPrefix, addAPI, addEditPrfxLenForm)
 from models.loginModel import *
-from models.sqlmodel import db, Users, geofeed, userAsset, blacklistPrefix, apis
+from models.sqlmodel import db, Users, geofeed, userAsset, blacklistPrefix, apis, prefixlen
 import logging
 
 logger = logging.getLogger(__name__)
@@ -365,6 +366,59 @@ def deleteasset(id):
     db.session.delete(query)
     db.session.commit()
     return "<script>alert('Delete successful.');window.location.href='/gui/assets';</script>"
+
+@guis.route("/prefixlen")
+@login_required
+def prefixlen():
+    privileged = False
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    if current_user_role == 0:
+        query = prefixlen.query.all()
+        privileged = True
+    else:
+        query = prefixlen.query.filter_by(userid=current_user_id).all()
+    return render_template("prefixlen.html",query=query,userid=current_user_id,privileged=privileged)
+
+@guis.route("/addprefixlen", methods=['GET','POST'])
+@login_required
+def addprefixlen():
+    current_user_id = current_user.id
+    form = addEditPrfxLenForm()
+    if request.method == "GET":
+        return render_template("addedit_prefixlen.html",form=form)
+    else:
+        if form.validate_on_submit():
+            prefix = form.prefix.data
+            allocation_len = form.allocation_len.data
+            site_count = form.site_count.data
+            lookup_existing = prefixlen.query.filter_by(prefix=prefix).prefix()
+            if lookup_existing:
+                return ("<script>alert('Prefix is added by other user. Please contact admin for assistant.');"
+                        "window.location.href='/gui/prefixlen';</script>")
+            newQuery = prefixlen(userid=current_user_id,prefix=prefix,allocation_len=allocation_len,site_count=site_count)
+            db.session.add(newQuery)
+            db.session.commit()
+            return "<script>alert('AS-SET added successfully.');window.location.href='/gui/prefixlen';</script>"
+        else:
+            logging.error(f"Form is invalid.")
+            return "<script>alert('System error is occurred.');history.back();</script>"
+
+@guis.route("/deleteprefixlen/<id>")
+@login_required
+def deleteprefixlen(id):
+    current_user_id = current_user.id
+    current_user_role = current_user.role
+    query = prefixlen.query.filter_by(id=id).first()
+    if not query:
+        return "<script>alert('No such AS-SET.');history.back();</script>"
+    if current_user_role != 0 and current_user_id != query.userid:
+        return f"<script>alert('You don't have permission to delete this AS-SET.');history.back();</script>"
+    if query.systemCreated:
+        return f"<script>alert('Cannot delete system generated AS-SET.');history.back();</script>"
+    db.session.delete(query)
+    db.session.commit()
+    return "<script>alert('Delete successful.');window.location.href='/gui/prefixlen';</script>"
 
 @guis.route("/blacklistprefix")
 @login_required

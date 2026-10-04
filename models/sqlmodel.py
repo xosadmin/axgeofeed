@@ -30,6 +30,15 @@ class geofeed(db.Model):
     city = db.Column(db.String(80), nullable=True)
     postal_code = db.Column(db.String(80), nullable=True)
 
+class prefixlen(db.Model):
+    __tablename__ = 'prefixlen'
+    id = db.Column(db.String(80), primary_key=True, default=userIDGen)
+    userid = db.Column(db.String(80), db.ForeignKey('users.id'), nullable=False)
+    include_in_prefixlen = db.Column(db.Boolean, nullable=False, default=True)
+    prefix = db.Column(db.String(80), nullable=False)
+    allocation_len = db.Column(db.Integer)
+    site_count = db.Column(db.Integer)
+
 class blacklistPrefix(db.Model):
     __tablename__ = 'blacklist_prefix'
     id = db.Column(db.String(80), primary_key=True, default=userIDGen)

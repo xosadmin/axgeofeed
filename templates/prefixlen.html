@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Prefixlen Management - AXGeofeed{% endblock %}
+
+{% block header %}
+<div class="container mt-3">
+  <div class="mt-4 p-5 bg-primary text-white rounded">
+    <h1>Prefixlen Management</h1>
+    <p>Compliance with RFC9977 - Manage prefixlen file content</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block mainContent %}
+<div style="text-align: right;">
+  <button type="button" class="btn text-primary" onclick="window.location.href='/gui/addprefixlen'">
+    <ion-icon name="add-circle-outline"></ion-icon> Add a new entry
+  </button>
+</div>
+<br>
+<table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Entry ID</th>
+        {% if privileged %}
+        <th>User ID</th>
+        {% endif %}
+        <th>Allocated Length</th>
+          <th>Site Count</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in query %}
+      <tr>
+        <td>{{item.id}}</td>
+        {% if privileged %}
+        <td><a href="/gui/users" title="Go to user management">{{item.userid}}</a></td>
+        {% endif %}
+          <td>{{item.allocation_len}}</td>
+        <td>{{item.site_count}}</td>
+          <td>
+            <a href="/gui/deleteprefixlen/{{ item.id }}"
+               title="Delete entry confirmation"
+               onclick="return confirm('Are you sure you want to delete entry {{item.asset_name}}?');">
+               <ion-icon name="trash-outline"></ion-icon> Delete
+            </a>
+          </td>
+      </tr>
+      {%endfor%}
+    </tbody>
+  </table>
+{% endblock %}

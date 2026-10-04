@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Add or Edit Entry - AXGeofeed{% endblock %}
+
+{% block mainContent %}
+{% if prefix %}
+  <h2>Edit Prefixlen Entry - {{prefix}}</h2>
+{% else %}
+  <h2>Add Prefixlen Entry</h2>
+{%endif%}
+<form method="POST" action="/gui/editprefixlen">
+    {{ form.hidden_tag() if form else "" }}
+  <div class="mb-3 mt-3">
+      <label for="prefix">Prefix</label>
+      {{ form.prefix(class="form-control", id="prefix", type="text", placeholder="Prefix", required=true) }}
+  </div>
+  <div class="mb-3 mt-3">
+      <label for="display">Display in Prefixlen CSV/JSON?</label>
+      {{ form.display(class="form-control", id="display", type="dropdown", placeholder="Display in PrefixLen CSV/JSON?", required=true) }}
+  </div>
+  <div class="mb-3 mt-3">
+      <label for="country_code">Allocated Length</label>
+      {{ form.country_code(class="form-control", id="allocation_len", type="text", placeholder="Country Code", required=true) }}
+  </div>
+  <div class="mb-3 mt-3">
+      <label for="region_code">Site Count</label>
+      {{ form.region_code(class="form-control", id="site_count", type="text", placeholder="Region Code", required=true) }}
+  </div>
+  {{ form.submit(class="btn btn-primary") }}&nbsp;
+  <button type="button" class="btn btn-danger" onclick="window.location.href='/gui/dashboard'">
+    <ion-icon name="arrow-back-circle-outline"></ion-icon> Back to homepage
+  </button>
+</form>
+<br>
+{% endblock %}

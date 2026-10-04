@@ -17,6 +17,13 @@ class addEditForm(FlaskForm):
     postal_code = StringField('Postal Code', validators=[DataRequired(), Length(min=2, max=10)])
     submit = SubmitField('Add or Edit')
 
+class addEditPrfxLenForm(FlaskForm):
+    prefix = StringField('Prefix', validators=[DataRequired(), Length(min=2, max=80)])
+    display = SelectField('Display In Prefixlen CSV/Json',choices=[('1', 'Yes'), ('0', 'No')],validators=[DataRequired()])
+    allocation_len = IntegerField('Allocation Length', validators=[NumberRange(min=24, max=128)])
+    site_count = IntegerField('Site Count', validators=[NumberRange(min=1)])
+    submit = SubmitField('Add or Edit')
+
 class addEditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     password = PasswordField('Password', validators=[Optional(), Length(min=2, max=20)])
