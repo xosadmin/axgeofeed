@@ -19,7 +19,7 @@ class addEditForm(FlaskForm):
 
 class addEditPrfxLenForm(FlaskForm):
     prefix = StringField('Prefix', validators=[DataRequired(), Length(min=2, max=80)])
-    display = SelectField('Display In Prefixlen CSV/Json',choices=[('1', 'Yes'), ('0', 'No')],validators=[DataRequired()])
+    display = SelectField('Display In Prefixlen CSV',choices=[('1', 'Yes'), ('0', 'No')],validators=[DataRequired()])
     allocation_len = IntegerField('Allocation Length', validators=[NumberRange(min=24, max=128)])
     site_count = IntegerField('Site Count', validators=[NumberRange(min=1)])
     submit = SubmitField('Add or Edit')
