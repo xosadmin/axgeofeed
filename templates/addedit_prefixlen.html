@@ -19,11 +19,11 @@
       {{ form.display(class="form-control", id="display", type="dropdown", placeholder="Display in PrefixLen CSV/JSON?", required=true) }}
   </div>
   <div class="mb-3 mt-3">
-      <label for="country_code">Allocated Length</label>
+      <label for="allocation_len">Allocated Length</label>
       {{ form.country_code(class="form-control", id="allocation_len", type="text", placeholder="Country Code", required=true) }}
   </div>
   <div class="mb-3 mt-3">
-      <label for="region_code">Site Count</label>
+      <label for="site_count">Site Count</label>
       {{ form.region_code(class="form-control", id="site_count", type="text", placeholder="Region Code", required=true) }}
   </div>
   {{ form.submit(class="btn btn-primary") }}&nbsp;

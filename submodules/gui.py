@@ -394,7 +394,7 @@ def addprefixlen():
             site_count = form.site_count.data
             lookup_existing = prefixlen.query.filter_by(prefix=prefix).prefix()
             if lookup_existing:
-                return ("<script>alert('Prefix is added by other user. Please contact admin for assistant.');"
+                return ("<script>alert('Prefixlen entry is added by other user. Please contact admin for assistant.');"
                         "window.location.href='/gui/prefixlen';</script>")
             maxlen = 1
             if check_ip_version(prefix) == 4:
@@ -407,7 +407,7 @@ def addprefixlen():
             newQuery = prefixlen(userid=current_user_id,prefix=prefix,allocation_len=allocation_len,site_count=site_count)
             db.session.add(newQuery)
             db.session.commit()
-            return "<script>alert('AS-SET added successfully.');window.location.href='/gui/prefixlen';</script>"
+            return "<script>alert('Prefixlen entry added successfully.');window.location.href='/gui/prefixlen';</script>"
         else:
             logging.error(f"Form is invalid.")
             return "<script>alert('System error is occurred.');history.back();</script>"
@@ -419,11 +419,9 @@ def deleteprefixlen(id):
     current_user_role = current_user.role
     query = prefixlen.query.filter_by(id=id).first()
     if not query:
-        return "<script>alert('No such AS-SET.');history.back();</script>"
+        return "<script>alert('No such entry.');history.back();</script>"
     if current_user_role != 0 and current_user_id != query.userid:
-        return f"<script>alert('You don't have permission to delete this AS-SET.');history.back();</script>"
-    if query.systemCreated:
-        return f"<script>alert('Cannot delete system generated AS-SET.');history.back();</script>"
+        return f"<script>alert('You don't have permission to delete this entry.');history.back();</script>"
     db.session.delete(query)
     db.session.commit()
     return "<script>alert('Delete successful.');window.location.href='/gui/prefixlen';</script>"
