@@ -20,11 +20,11 @@
   </div>
   <div class="mb-3 mt-3">
       <label for="allocation_len">Allocated Length</label>
-      {{ form.allocation_len(class="form-control", id="allocation_len", type="text", placeholder="Allocated length", required=true) }}
+      {{ form.allocation_len(class="form-control", id="allocation_len", type="text", placeholder="Allocated length") }}
   </div>
   <div class="mb-3 mt-3">
       <label for="site_count">Site Count</label>
-      {{ form.site_count(class="form-control", id="site_count", type="text", placeholder="Site Count", required=true) }}
+      {{ form.site_count(class="form-control", id="site_count", type="text", placeholder="Site Count") }}
   </div>
   {{ form.submit(class="btn btn-primary") }}&nbsp;
   <button type="button" class="btn btn-danger" onclick="window.location.href='/gui/dashboard'">
