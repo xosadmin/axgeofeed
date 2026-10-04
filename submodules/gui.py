@@ -396,6 +396,14 @@ def addprefixlen():
             if lookup_existing:
                 return ("<script>alert('Prefix is added by other user. Please contact admin for assistant.');"
                         "window.location.href='/gui/prefixlen';</script>")
+            maxlen = 1
+            if check_ip_version(prefix) == 4:
+                maxlen = 32
+            elif check_ip_version(prefix) == 6:
+                maxlen = 128
+            if allocation_len and (allocation_len < 1 or allocation_len > maxlen):
+                return ("<script>alert('Invalid allocation length!');"
+                        "window.location.href='/gui/prefixlen';</script>")
             newQuery = prefixlen(userid=current_user_id,prefix=prefix,allocation_len=allocation_len,site_count=site_count)
             db.session.add(newQuery)
             db.session.commit()
